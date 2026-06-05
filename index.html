@@ -1,0 +1,1538 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>ServisHP Pro - Manajemen Servis HP</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: linear-gradient(145deg, #e9ecef 0%, #dee2e6 100%); padding: 20px; min-height: 100vh; }
+        .app-container { max-width: 1600px; margin: 0 auto; }
+        .header { background: #1e2a3e; color: white; padding: 15px 25px; border-radius: 28px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; }
+        .header h1 { font-size: 1.5rem; display: flex; align-items: center; gap: 10px; }
+        .header h1 i { color: #f8b500; }
+        .badge-stats { background: #0f172a; padding: 6px 15px; border-radius: 50px; display: flex; gap: 15px; flex-wrap: wrap; font-size: 0.75rem; }
+        .badge-stats span { color: #f8b500; font-weight: bold; }
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
+        .tab-btn { background: white; border: none; padding: 10px 22px; border-radius: 40px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: all 0.2s; }
+        .tab-btn.active { background: #1e2a3e; color: white; }
+        .tab-btn.active i { color: #f8b500; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .btn-terima, .btn-ambil, .btn-report, .btn-excel, .btn-danger, .btn-warning, .btn-success, .btn-teknisi, .btn-pelanggan, .btn-nota { padding: 8px 18px; border-radius: 40px; font-weight: bold; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; }
+        .btn-terima { background: #f8b500; color: #1e2a3e; }
+        .btn-ambil { background: #10b981; color: white; }
+        .btn-report { background: #1e2a3e; color: white; }
+        .btn-excel { background: #1f7b4d; color: white; }
+        .btn-danger { background: #dc2626; color: white; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-teknisi { background: #3b82f6; color: white; }
+        .btn-pelanggan { background: #8b5cf6; color: white; }
+        .btn-nota { background: #ec489a; color: white; }
+        .btn-nota-wa { background: #25D366; color: white; }
+        .report-card { background: white; border-radius: 24px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .report-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; }
+        .report-title { font-size: 1.2rem; font-weight: bold; color: #1e2a3e; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .stat-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px; border-radius: 16px; text-align: center; }
+        .stat-value { font-size: 1.3rem; font-weight: bold; }
+        .stat-label { font-size: 0.65rem; opacity: 0.9; }
+        .profit-card { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .revenue-card { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+        .weekly-card { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); }
+        .yearly-card { background: linear-gradient(135deg, #ec489a 0%, #be185d 100%); }
+        .table-wrapper { background: white; border-radius: 20px; overflow-x: auto; max-height: 500px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+        th { background: #f1f5f9; padding: 12px 8px; text-align: left; position: sticky; top: 0; }
+        td { padding: 10px 8px; border-bottom: 1px solid #edf2f7; }
+        .status-badge, .transaksi-badge { display: inline-block; padding: 4px 10px; border-radius: 50px; font-weight: 600; font-size: 0.65rem; cursor: pointer; }
+        .status-antri { background: #e0e7ff; color: #1e40af; }
+        .status-proses { background: #fef3c7; color: #b45309; }
+        .status-konfirmasi { background: #dbeafe; color: #1e40af; }
+        .status-selesai { background: #d1fae5; color: #065f46; }
+        .status-cancel { background: #fee2e2; color: #991b1b; }
+        .transaksi-diambil { background: #dcfce7; color: #166534; }
+        .transaksi-belum { background: #fee2e2; color: #991b1b; }
+        .search-bar { margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .search-bar input, .search-bar select { padding: 8px 15px; border-radius: 40px; border: 1px solid #cbd5e1; background: white; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 25px; border-radius: 24px; width: 90%; max-width: 550px; max-height: 85vh; overflow-y: auto; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.8rem; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; border: 1.5px solid #e2e8f0; border-radius: 14px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .btn-modal { width: 100%; padding: 12px; background: #1e2a3e; color: white; border: none; border-radius: 40px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        .btn-modal-secondary { width: 100%; padding: 12px; background: #64748b; color: white; border: none; border-radius: 40px; font-weight: bold; cursor: pointer; margin-top: 5px; }
+        .info-banner { background: #e0f2fe; padding: 10px 15px; border-radius: 12px; margin-bottom: 15px; font-size: 0.75rem; }
+        .hour-chart { display: flex; gap: 4px; margin-top: 10px; align-items: flex-end; }
+        .hour-bar { flex: 1; background: #3b82f6; border-radius: 8px 8px 0 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; font-size: 0.6rem; color: white; font-weight: bold; padding-bottom: 4px; min-height: 30px; transition: 0.3s; }
+        .hour-label { text-align: center; font-size: 0.6rem; margin-top: 4px; }
+        .customer-suggestion { background: white; border: 1px solid #cbd5e1; border-radius: 12px; max-height: 200px; overflow-y: auto; position: absolute; z-index: 100; width: calc(100% - 24px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .customer-suggestion div { padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #e2e8f0; transition: background 0.2s; }
+        .customer-suggestion div:hover { background: #f1f5f9; }
+        .customer-suggestion .add-new { color: #f59e0b; font-weight: bold; background: #fffbeb; }
+        .customer-suggestion .add-new:hover { background: #fef3c7; }
+        .relative { position: relative; }
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
+        .cashier-panel { background: linear-gradient(135deg, #1e2a3e 0%, #0f172a 100%); color: white; padding: 20px; border-radius: 20px; margin-bottom: 20px; }
+        .cashier-panel .total { font-size: 1.8rem; font-weight: bold; color: #f8b500; }
+        .btn-cash { background: #f8b500; color: #1e2a3e; border: none; padding: 8px 16px; border-radius: 40px; font-weight: bold; cursor: pointer; margin-top: 5px; width: 100%; }
+        .kembalian-positive { background: #10b981; color: white; padding: 10px; border-radius: 12px; text-align: center; font-weight: bold; }
+        .kembalian-negative { background: #ef4444; color: white; padding: 10px; border-radius: 12px; text-align: center; font-weight: bold; }
+        .current-time-badge { background: #e0f2fe; padding: 5px 10px; border-radius: 20px; font-size: 0.7rem; color: #0369a1; margin-bottom: 10px; display: inline-block; }
+        
+        /* STYLE NOTA THERMAL */
+        @media print {
+            body * { visibility: hidden; }
+            .nota-thermal-print, .nota-thermal-print * { visibility: visible; }
+            .nota-thermal-print { position: absolute; top: 0; left: 0; width: 100%; margin: 0; padding: 8px; }
+            .no-print { display: none !important; }
+        }
+        
+        .nota-thermal { 
+            font-family: 'Courier New', monospace; 
+            font-size: 12px; 
+            width: 300px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 15px; 
+            border-radius: 0;
+        }
+        .nota-thermal h3 { font-size: 14px; text-align: center; margin-bottom: 10px; }
+        .nota-thermal .line { border-top: 1px dashed #000; margin: 8px 0; }
+        .nota-thermal .line-double { border-top: 2px solid #000; margin: 8px 0; }
+        .nota-thermal table { width: 100%; font-size: 10px; }
+        .nota-thermal td { padding: 2px 0; }
+        .nota-thermal .total { font-weight: bold; font-size: 12px; }
+        .nota-thermal .footer { text-align: center; margin-top: 10px; font-size: 10px; }
+        
+        /* STYLE NOTA DIGITAL UNTUK JPG - DIPERBAIKI TIDAK TERPOTONG */
+        .nota-digital-jpg { 
+            font-family: 'Segoe UI', 'Poppins', sans-serif; 
+            width: 500px; 
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 24px; 
+            padding: 30px 30px 40px 30px;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.1);
+            border: 1px solid rgba(248, 181, 0, 0.2);
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+        .nota-jpg-header {
+            text-align: center;
+            border-bottom: 2px solid #f8b500;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .nota-jpg-header h2 {
+            color: #1e2a3e;
+            font-size: 22px;
+            margin-bottom: 5px;
+        }
+        .nota-jpg-header p {
+            color: #6b7280;
+            font-size: 11px;
+        }
+        .nota-jpg-id {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .nota-jpg-id small {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+        .nota-jpg-id div {
+            font-size: 18px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .nota-jpg-info {
+            margin-bottom: 20px;
+        }
+        .nota-jpg-info table {
+            width: 100%;
+            font-size: 12px;
+        }
+        .nota-jpg-info td {
+            padding: 8px 0;
+            color: #374151;
+        }
+        .nota-jpg-info td:first-child {
+            width: 35%;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        .nota-jpg-info td:last-child {
+            font-weight: 600;
+            color: #1e2a3e;
+        }
+        .nota-jpg-estimate {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            padding: 20px 15px;
+            border-radius: 16px;
+            margin: 20px 0 20px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+        .nota-jpg-estimate-item {
+            text-align: center;
+            flex: 1;
+        }
+        .nota-jpg-estimate-item .label {
+            font-size: 11px;
+            color: #92400e;
+            margin-bottom: 8px;
+        }
+        .nota-jpg-estimate-item .value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #b45309;
+        }
+        .nota-jpg-footer {
+            text-align: center;
+            font-size: 10px;
+            color: #9ca3af;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 20px;
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 768px) { body { padding: 10px; } .stats-grid { grid-template-columns: repeat(2, 1fr); } th, td { font-size: 0.6rem; padding: 6px 4px; } .form-row { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header">
+        <h1><i class="fas fa-chart-line"></i> ServisHP Pro</h1>
+        <div class="badge-stats">
+            <div>Total: <span id="totalCount">0</span></div>
+            <div>Antri: <span id="antriCount">0</span></div>
+            <div>Proses: <span id="prosesCount">0</span></div>
+            <div>Konfirmasi: <span id="konfirmasiCount">0</span></div>
+            <div>Selesai: <span id="selesaiCount">0</span></div>
+            <div>Dibatalkan: <span id="cancelCount">0</span></div>
+        </div>
+    </div>
+
+    <div class="nav-tabs">
+        <button class="tab-btn active" data-tab="data"><i class="fas fa-table"></i> Data Servis</button>
+        <button class="tab-btn" data-tab="teknisi"><i class="fas fa-tools"></i> Teknisi</button>
+        <button class="tab-btn" data-tab="pelanggan"><i class="fas fa-users"></i> Data Pelanggan</button>
+        <button class="tab-btn" data-tab="laporan"><i class="fas fa-chart-bar"></i> Laporan</button>
+        <button class="tab-btn" data-tab="analisa"><i class="fas fa-chart-line"></i> Analisa Waktu</button>
+        <button class="tab-btn" data-tab="setting"><i class="fas fa-cog"></i> Setting</button>
+    </div>
+
+    <div id="tab-data" class="tab-content active">
+        <div class="btn-group">
+            <button id="openTerimaServisanBtn" class="btn-terima"><i class="fas fa-clipboard-list"></i> Terima Servisan</button>
+            <button id="openAmbilServisanBtn" class="btn-ambil"><i class="fas fa-hand-holding-heart"></i> Ambil Servisan</button>
+            <button id="resetSearchBtn" class="btn-warning"><i class="fas fa-undo-alt"></i> Reset</button>
+        </div>
+        <div class="search-bar">
+            <input type="text" id="searchIdInput" placeholder="ID Servis" style="flex:0 0 150px;">
+            <input type="text" id="searchInput" placeholder="Nama / Model" style="flex:1;">
+            <select id="filterStatusPengerjaan">
+                <option value="all">Semua Pengerjaan</option>
+                <option value="Antri">Antri</option>
+                <option value="Proses">Proses</option>
+                <option value="Konfirmasi">Konfirmasi</option>
+                <option value="Selesai">Selesai</option>
+                <option value="Dibatalkan">Dibatalkan</option>
+            </select>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>ID Servis</th>
+                        <th>Pelanggan</th>
+                        <th>Model</th>
+                        <th>Keluhan</th>
+                        <th>Estimasi Biaya</th>
+                        <th>Estimasi Selesai</th>
+                        <th>Catatan</th>
+                        <th>Tgl Masuk</th>
+                        <th>Status</th>
+                        <th>Status Transaksi</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="tab-teknisi" class="tab-content">
+        <div class="report-card">
+            <div class="report-header"><div class="report-title"><i class="fas fa-tools"></i> Panel Teknisi</div></div>
+            <div class="search-bar">
+                <input type="text" id="teknisiSearch" placeholder="Cari ID / Nama / Model" style="flex:1;">
+                <select id="teknisiStatusFilter">
+                    <option value="all">Semua Status</option>
+                    <option value="Antri">Antri</option>
+                    <option value="Proses">Proses</option>
+                    <option value="Konfirmasi">Konfirmasi</option>
+                    <option value="Selesai">Selesai</option>
+                    <option value="Dibatalkan">Dibatalkan</option>
+                </select>
+                <button id="resetTeknisiFilter" class="btn-warning">Reset</button>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead><tr><th>ID Servis</th><th>Pelanggan</th><th>Model</th><th>Estimasi Biaya</th><th>Modal</th><th>Keuntungan</th><th>Status</th><th>Aksi</th></tr></thead>
+                    <tbody id="teknisiTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-pelanggan" class="tab-content">
+        <div class="report-card">
+            <div class="report-header"><div class="report-title"><i class="fas fa-users"></i> Manajemen Pelanggan</div><button id="openPelangganModalBtn" class="btn-pelanggan"><i class="fas fa-user-plus"></i> Tambah Pelanggan</button></div>
+            <div class="search-bar"><input type="text" id="pelangganSearch" placeholder="Cari Nama / Telepon" style="flex:1;"></div>
+            <div class="table-wrapper">
+                <table>
+                    <thead><tr><th>Nama Pelanggan</th><th>No Telepon</th><th>Alamat</th><th>Total Servis</th><th>Aksi</th></tr></thead>
+                    <tbody id="pelangganTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-laporan" class="tab-content">
+        <div class="report-card">
+            <div class="report-header"><div class="report-title">Laporan Keuangan</div></div>
+            <div class="report-filter" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+                <select id="laporanMode" style="padding: 8px 15px; border-radius: 40px;">
+                    <option value="daily">📅 Harian</option>
+                    <option value="weekly">📆 Mingguan</option>
+                    <option value="monthly">📊 Bulanan</option>
+                    <option value="yearly">📈 Tahunan</option>
+                </select>
+                <div id="dynamicFilter"></div>
+                <button id="generateLaporanBtn" class="btn-report">Tampilkan</button>
+                <button id="exportLaporanBtn" class="btn-excel">Export</button>
+            </div>
+            <div id="laporanStats" class="stats-grid"></div>
+            <div class="table-wrapper"><table id="laporanTable"><thead id="laporanTableHead"></thead><tbody id="laporanTableBody"></tbody></table></div>
+        </div>
+    </div>
+
+    <div id="tab-analisa" class="tab-content">
+        <div class="report-card">
+            <div class="report-header"><div class="report-title">Analisa Pola Waktu</div></div>
+            <div class="stats-grid"><div class="stat-card"><div class="stat-value" id="jamTersibuk">-</div><div class="stat-label">Jam Tersibuk</div></div><div class="stat-card"><div class="stat-value" id="totalJam">0</div><div class="stat-label">Total Transaksi</div></div></div>
+            <div id="hourChart"></div>
+        </div>
+    </div>
+
+    <div id="tab-setting" class="tab-content">
+        <div class="report-card">
+            <div class="report-header"><div class="report-title">Manajemen Database</div></div>
+            <div class="form-group"><button id="exportDataBtn" class="btn-excel" style="width:100%;">Export Semua Data</button></div>
+            <div class="form-group"><input type="file" id="excelFileInput" accept=".xlsx"><button id="importExcelBtn" class="btn-warning" style="margin-top:10px; width:100%;">Import Data</button></div>
+            <div class="form-group"><button id="useDefaultBtn" class="btn-success" style="width:100%;">Buat Data Default</button></div>
+            <div class="form-group"><button id="resetDatabaseBtn" class="btn-danger" style="width:100%;">Hapus Semua Data</button></div>
+        </div>
+    </div>
+</div>
+
+<div id="servisModal" class="modal">
+    <div class="modal-content">
+        <h2 id="modalTitle"><i class="fas fa-clipboard-list"></i> Terima Servisan Baru</h2>
+        <div class="current-time-badge"><i class="fas fa-clock"></i> <span id="currentDateTimeDisplay"></span></div>
+        <input type="hidden" id="editId">
+        <div class="form-group relative">
+            <label>Nama Pelanggan *</label>
+            <input type="text" id="namaPelanggan" autocomplete="off" placeholder="Ketik nama pelanggan...">
+            <div id="customerSuggestions" class="customer-suggestion" style="display:none;"></div>
+        </div>
+        <div class="form-group"><label>No Telepon</label><input type="text" id="noTelp"></div>
+        <div class="form-group"><label>Alamat</label><textarea id="alamat" rows="2"></textarea></div>
+        <div class="form-group"><label>Model HP *</label><input type="text" id="modelHp"></div>
+        <div class="form-group"><label>Keluhan</label><textarea id="keluhan" rows="2"></textarea></div>
+        <div class="form-row">
+            <div class="form-group"><label>Estimasi Biaya (Rp)</label><input type="number" id="estimasiBiaya" value="0"></div>
+            <div class="form-group"><label>Biaya Modal (Rp)</label><input type="number" id="biayaModal" value="0"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>Tanggal Masuk *</label><input type="date" id="tanggalMasuk"></div>
+            <div class="form-group"><label>Jam Masuk *</label><input type="time" id="jamMasuk"></div>
+        </div>
+        <div class="form-group"><label>Estimasi Selesai *</label><input type="date" id="estimasiSelesai"></div>
+        <div class="form-group"><label>Status Pengerjaan</label>
+            <select id="statusServis">
+                <option value="Antri">Antri</option>
+                <option value="Proses">Proses</option>
+                <option value="Konfirmasi">Konfirmasi</option>
+                <option value="Selesai">Selesai</option>
+                <option value="Dibatalkan">Dibatalkan</option>
+            </select>
+        </div>
+        <div class="form-group"><label>Catatan Teknisi</label><textarea id="catatanTeknisi" rows="2"></textarea></div>
+        <button id="btnSimpanModal" class="btn-modal"><i class="fas fa-save"></i> Simpan Servisan</button>
+        <button id="btnBatalModal" class="btn-modal-secondary">Batal</button>
+    </div>
+</div>
+
+<div id="quickPelangganModal" class="modal"><div class="modal-content"><h2>Tambah Pelanggan Baru</h2><div class="form-group"><label>Nama Lengkap *</label><input type="text" id="quickNamaPelanggan"></div><div class="form-group"><label>No Telepon *</label><input type="text" id="quickNoTelp"></div><div class="form-group"><label>Alamat</label><textarea id="quickAlamat" rows="2"></textarea></div><button id="btnSimpanQuickPelanggan" class="btn-modal">Simpan Pelanggan</button><button id="btnBatalQuickPelanggan" class="btn-modal-secondary">Batal</button></div></div>
+
+<div id="ambilModal" class="modal"><div class="modal-content"><h2>Ambil Servisan</h2><input type="hidden" id="ambilServisId"><div class="form-group"><label>Cari Servis</label><input type="text" id="ambilSearch" placeholder="ID / Nama / Model"><div id="ambilSearchResults" style="max-height:150px;overflow:auto;border:1px solid #ddd;border-radius:12px;margin-top:8px;display:none;"></div></div><div class="cashier-panel"><div><strong>ID Servis:</strong> <span id="ambilId">-</span></div><div><strong>Pelanggan:</strong> <span id="ambilNama">-</span></div><div><strong>Model:</strong> <span id="ambilModel">-</span></div><div class="total">Biaya: Rp <span id="ambilEstimasiBiaya">0</span></div></div><div class="form-group"><label>Uang Diterima (Rp)</label><input type="number" id="uangDiterima" value="0"><button id="btnSetUangPas" class="btn-cash">Set Sesuai Tagihan</button></div><div id="kembalianDisplay" class="kembalian-positive">Rp 0</div><div class="form-row"><div class="form-group"><label>Tgl Pengambilan</label><input type="date" id="tglAmbil"></div><div class="form-group"><label>Jam Pengambilan</label><input type="time" id="jamAmbil"></div></div><div class="form-group"><label>Diterima Oleh</label><input type="text" id="diterimaOleh"></div><button id="btnKonfirmasiAmbil" class="btn-ambil" style="width:100%;">Konfirmasi Pengambilan</button><button id="btnBatalAmbil" class="btn-modal-secondary">Batal</button></div></div>
+
+<div id="teknisiModal" class="modal"><div class="modal-content"><h2>Edit Servis - Teknisi</h2><input type="hidden" id="teknisiEditId"><div class="form-group"><label>ID Servis</label><input type="text" id="teknisiId" readonly style="background:#f1f5f9;"></div><div class="form-group"><label>Pelanggan</label><input type="text" id="teknisiPelanggan" readonly style="background:#f1f5f9;"></div><div class="form-group"><label>Model HP</label><input type="text" id="teknisiModel" readonly style="background:#f1f5f9;"></div><div class="form-group"><label>Keluhan</label><textarea id="teknisiKeluhan" readonly rows="2" style="background:#f1f5f9;"></textarea></div><div class="form-row"><div class="form-group"><label>Estimasi Biaya (Rp)</label><input type="number" id="teknisiEstimasiBiaya" value="0"></div><div class="form-group"><label>Biaya Modal (Rp)</label><input type="number" id="teknisiBiayaModal" value="0"></div></div><div class="form-group"><label>Estimasi Selesai</label><input type="date" id="teknisiEstimasiSelesai"></div><div class="form-group"><label>Status Pengerjaan</label><select id="teknisiStatus"><option value="Antri">Antri</option><option value="Proses">Proses</option><option value="Konfirmasi">Konfirmasi</option><option value="Selesai">Selesai</option><option value="Dibatalkan">Dibatalkan</option></select></div><div class="form-group"><label>Catatan Teknis</label><textarea id="teknisiCatatan" rows="2"></textarea></div><button id="btnSimpanTeknisi" class="btn-teknisi" style="width:100%;">Simpan Perubahan</button><button id="btnBatalTeknisi" class="btn-modal-secondary">Batal</button></div></div>
+
+<div id="pelangganModal" class="modal"><div class="modal-content"><h2 id="pelangganModalTitle">Tambah Pelanggan Baru</h2><input type="hidden" id="editPelangganId"><div class="form-group"><label>Nama Lengkap *</label><input type="text" id="pelangganNama"></div><div class="form-group"><label>No Telepon *</label><input type="text" id="pelangganTelp"></div><div class="form-group"><label>Alamat</label><textarea id="pelangganAlamat" rows="2"></textarea></div><button id="btnSimpanPelanggan" class="btn-modal">Simpan Pelanggan</button><button id="btnBatalPelanggan" class="btn-modal-secondary">Batal</button></div></div>
+
+<div id="notaModal" class="modal">
+    <div class="modal-content" style="max-width: 650px;">
+        <h2><i class="fas fa-receipt"></i> Nota Servisan</h2>
+        <div style="display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap;">
+            <button id="btnCetakThermal" class="btn-warning"><i class="fas fa-print"></i> Cetak Thermal</button>
+            <button id="btnKirimWA" class="btn-nota-wa"><i class="fab fa-whatsapp"></i> Kirim ke WhatsApp (JPG)</button>
+        </div>
+        <div id="notaPreview" style="max-height: 500px; overflow-y: auto; background: #f0f0f0; padding: 20px; border-radius: 16px; display: flex; justify-content: center;">
+            </div>
+        <button id="btnTutupNota" class="btn-modal-secondary" style="margin-top: 15px;">Tutup</button>
+    </div>
+</div>
+
+<script>
+// ========== DATABASE ==========
+const DB_NAME = 'ServisHPDB_v18';
+const STORE_SERVIS = 'servis';
+const STORE_PELANGGAN = 'pelanggan';
+let db = null;
+let daftarServis = [];
+let daftarPelanggan = [];
+let currentNotaData = null;
+
+function openDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, 2);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => { db = request.result; resolve(db); };
+        request.onupgradeneeded = (event) => {
+            const database = event.target.result;
+            if (!database.objectStoreNames.contains(STORE_SERVIS)) {
+                database.createObjectStore(STORE_SERVIS, { keyPath: 'id' });
+            }
+            if (!database.objectStoreNames.contains(STORE_PELANGGAN)) {
+                database.createObjectStore(STORE_PELANGGAN, { keyPath: 'nama' });
+            }
+        };
+    });
+}
+
+async function getAllServis() {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction([STORE_SERVIS], 'readonly');
+        const req = tx.objectStore(STORE_SERVIS).getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function getAllPelanggan() {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction([STORE_PELANGGAN], 'readonly');
+        const req = tx.objectStore(STORE_PELANGGAN).getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function saveServis(servis) {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction([STORE_SERVIS], 'readwrite');
+        const req = tx.objectStore(STORE_SERVIS).put(servis);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function savePelanggan(pelanggan) {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction([STORE_PELANGGAN], 'readwrite');
+        const req = tx.objectStore(STORE_PELANGGAN).put(pelanggan);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function deleteServis(id) {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction([STORE_SERVIS], 'readwrite');
+        const req = tx.objectStore(STORE_SERVIS).delete(id);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function deletePelanggan(nama) {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction([STORE_PELANGGAN], 'readwrite');
+        const req = tx.objectStore(STORE_PELANGGAN).delete(nama);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function clearAllServis() {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction([STORE_SERVIS], 'readwrite');
+        const req = tx.objectStore(STORE_SERVIS).clear();
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function clearAllPelanggan() {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction([STORE_PELANGGAN], 'readwrite');
+        const req = tx.objectStore(STORE_PELANGGAN).clear();
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+    });
+}
+
+function generateId() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    return `SRV/${year}${month}${day}/${random}`;
+}
+
+function escapeHtml(str) { if(!str) return ""; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;')); }
+function formatRupiah(n) { return new Intl.NumberFormat('id-ID').format(n || 0); }
+
+function getCurrentDateTimeLocal() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const tanggal = `${year}-${month}-${day}`;
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const jam = `${hours}:${minutes}`;
+    return { tanggal, jam };
+}
+
+function updateCurrentDateTimeDisplay() {
+    const now = new Date();
+    const displayElement = document.getElementById('currentDateTimeDisplay');
+    if (displayElement) {
+        const options = { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            timeZone: 'Asia/Jakarta'
+        };
+        const formatted = now.toLocaleDateString('id-ID', options);
+        displayElement.innerHTML = `<i class="fas fa-clock"></i> ${formatted} WIB`;
+    }
+}
+
+function setCurrentDateTimeToForm() {
+    const { tanggal, jam } = getCurrentDateTimeLocal();
+    document.getElementById("tanggalMasuk").value = tanggal;
+    document.getElementById("jamMasuk").value = jam;
+    updateCurrentDateTimeDisplay();
+}
+
+// ========== LOAD DATA ==========
+async function loadDataFromDB() {
+    daftarServis = await getAllServis();
+    daftarPelanggan = await getAllPelanggan();
+    daftarServis.sort((a,b) => (b.tglMasuk || '').localeCompare(a.tglMasuk || ''));
+    updateUI();
+    renderTeknisiTable();
+    renderPelangganTable();
+    if (document.querySelector('.tab-btn.active')?.dataset.tab === 'laporan') generateLaporan();
+    if (document.querySelector('.tab-btn.active')?.dataset.tab === 'analisa') renderAnalisa();
+}
+
+function updateUI() {
+    document.getElementById("totalCount").innerText = daftarServis.length;
+    document.getElementById("antriCount").innerText = daftarServis.filter(s => s.status === "Antri").length;
+    document.getElementById("prosesCount").innerText = daftarServis.filter(s => s.status === "Proses").length;
+    document.getElementById("konfirmasiCount").innerText = daftarServis.filter(s => s.status === "Konfirmasi").length;
+    document.getElementById("selesaiCount").innerText = daftarServis.filter(s => s.status === "Selesai").length;
+    document.getElementById("cancelCount").innerText = daftarServis.filter(s => s.status === "Dibatalkan").length;
+    renderDataTable();
+}
+
+function renderDataTable() {
+    const tbody = document.getElementById("tableBody");
+    const searchId = document.getElementById("searchIdInput")?.value.toLowerCase() || "";
+    const search = document.getElementById("searchInput")?.value.toLowerCase() || "";
+    const filterP = document.getElementById("filterStatusPengerjaan")?.value || "all";
+    let filtered = daftarServis.filter(s => 
+        (searchId === "" || s.id.toLowerCase().includes(searchId)) &&
+        (search === "" || s.namaPelanggan.toLowerCase().includes(search) || s.model.toLowerCase().includes(search)) &&
+        (filterP === "all" || s.status === filterP)
+    );
+    if (filtered.length === 0) { tbody.innerHTML = "<tr><td colspan='12'>Tidak ada data</td></tr>"; return; }
+    tbody.innerHTML = filtered.map((item, idx) => `
+        <tr>
+            <td>${idx+1}</td>
+            <td>${item.id}</td>
+            <td>${escapeHtml(item.namaPelanggan)}</td>
+            <td>${escapeHtml(item.model)}</td>
+            <td>${escapeHtml((item.keluhan||'').substring(0,30))}</td>
+            <td>Rp ${formatRupiah(item.estimasiBiaya)}</td>
+            <td>${item.estimasiSelesai || '-'}</td>
+            <td>${escapeHtml((item.catatanTeknisi||'-').substring(0,20))}</td>
+            <td>${item.tglMasuk}</td>
+            <td><span class="status-badge status-${(item.status||'antri').toLowerCase()}">${item.status}</span></td>
+            <td><span class="transaksi-badge ${(item.statusTransaksi === 'Diambil' ? 'transaksi-diambil' : 'transaksi-belum')}">${item.statusTransaksi || 'Belum Diambil'}</span></td>
+            <td><i class="fas fa-print" style="cursor:pointer;color:#ec489a;margin-right:8px;" onclick="cetakNota('${item.id}')" title="Cetak Nota"></i> <i class="fas fa-edit" style="cursor:pointer;color:#3b82f6;" onclick="editServis('${item.id}')"></i> <i class="fas fa-trash" style="cursor:pointer;color:#ef4444;margin-left:8px;" onclick="hapusServis('${item.id}')"></i></td>
+        </tr>
+    `).join('');
+}
+
+// ========== FUNGSI CETAK NOTA ==========
+function cetakNota(id) {
+    const servis = daftarServis.find(s => s.id === id);
+    if (!servis) {
+        alert("Data servis tidak ditemukan!");
+        return;
+    }
+    currentNotaData = servis;
+    
+    // Generate preview nota
+    const notaHTML = generateNotaJPGHTML(servis);
+    document.getElementById("notaPreview").innerHTML = notaHTML;
+    document.getElementById("notaModal").style.display = "flex";
+}
+
+function generateNotaJPGHTML(servis) {
+    const tanggalCetak = new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+    
+    return `
+        <div class="nota-digital-jpg" id="notaJPGContainer" style="width: 520px; padding: 35px 30px 45px 30px;">
+            <div class="nota-jpg-header">
+                <h2>I Cell</h2>
+                <p>Servis HP Profesional & Terpercaya</p>
+            </div>
+            
+            <div class="nota-jpg-id">
+                <small>ID SERVIS</small>
+                <div>${escapeHtml(servis.id)}</div>
+            </div>
+            
+            <div class="nota-jpg-info">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="padding: 6px 0;">Tanggal Masuk</td><td style="padding: 6px 0;">: <b>${servis.tglMasuk || '-'} ${servis.jamMasuk || ''}</b></td></tr>
+                    <tr><td style="padding: 6px 0;">Nama Pelanggan</td><td style="padding: 6px 0;">: <b>${escapeHtml(servis.namaPelanggan)}</b></td></tr>
+                    <tr><td style="padding: 6px 0;">No Telepon</td><td style="padding: 6px 0;">: ${escapeHtml(servis.noTelp || '-')}</td></tr>
+                    <tr><td style="padding: 6px 0;">Alamat</td><td style="padding: 6px 0;">: ${escapeHtml(servis.alamat || '-')}</td></tr>
+                    <tr><td style="padding: 6px 0;">Model HP</td><td style="padding: 6px 0;">: <b>${escapeHtml(servis.model)}</b></td></tr>
+                    <tr><td style="padding: 6px 0;">Keluhan</td><td style="padding: 6px 0;">: ${escapeHtml(servis.keluhan || '-')}</td></tr>
+                </table>
+            </div>
+            
+            <div class="nota-jpg-footer" style="margin-top: 10px;">
+                <p>Terima kasih atas kepercayaan Anda<br>
+                Nota ini sebagai bukti penerimaan barang<br>
+                Dicetak: ${tanggalCetak}</p>
+            </div>
+        </div>
+    `;
+}
+
+function generateNotaThermalHTML(servis) {
+    return `
+        <div class="nota-thermal" id="thermalNotaContent">
+            <center><h3>I Cell</h3></center>
+            <center><small>Servis HP Profesional</small></center>
+            <div class="line"></div>
+            <table style="width:100%">
+                <tr><td width="40%">ID Servis</td><td width="5%">:</td><td><b>${escapeHtml(servis.id)}</b></td></tr>
+                <tr><td>Tgl Masuk</td><td>:</td><td>${servis.tglMasuk || '-'} ${servis.jamMasuk || ''}</td></tr>
+                <tr><td>Pelanggan</td><td>:</td><td>${escapeHtml(servis.namaPelanggan)}</td></tr>
+                <tr><td>No Telepon</td><td>:</td><td>${escapeHtml(servis.noTelp || '-')}</td></tr>
+                <tr><td>Model HP</td><td>:</td><td>${escapeHtml(servis.model)}</td></tr>
+                <tr><td>Keluhan</td><td>:</td><td>${escapeHtml(servis.keluhan || '-')}</td></tr>
+            </table>
+            <div class="line-double"></div>
+            <div class="footer">
+                <small>Terima kasih atas kepercayaan Anda<br>
+                Nota ini sebagai bukti penerimaan barang</small>
+            </div>
+        </div>
+    `;
+}
+
+function cetakThermal() {
+    if (!currentNotaData) return;
+    const thermalHTML = generateNotaThermalHTML(currentNotaData);
+    const printWindow = window.open('', '_blank', 'width=400,height=600');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Cetak Nota - ${currentNotaData.id}</title>
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body { font-family: 'Courier New', monospace; font-size: 12px; padding: 8px; }
+                .nota-thermal { width: 300px; margin: 0 auto; }
+                .nota-thermal h3 { font-size: 14px; text-align: center; margin-bottom: 5px; }
+                .nota-thermal .line { border-top: 1px dashed #000; margin: 5px 0; }
+                .nota-thermal .line-double { border-top: 2px solid #000; margin: 5px 0; }
+                .nota-thermal table { width: 100%; font-size: 10px; }
+                .nota-thermal td { padding: 2px 0; }
+                .nota-thermal .footer { text-align: center; margin-top: 8px; font-size: 9px; }
+                @media print {
+                    body { margin: 0; padding: 0; }
+                    .no-print { display: none; }
+                }
+            </style>
+        </head>
+        <body>
+            ${thermalHTML}
+            <div class="no-print" style="text-align: center; margin-top: 20px;">
+                <button onclick="window.print()" style="padding: 10px 20px; margin: 5px;">🖨️ Cetak</button>
+                <button onclick="window.close()" style="padding: 10px 20px; margin: 5px;">✖ Tutup</button>
+            </div>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+}
+
+async function kirimNotaWA() {
+    if (!currentNotaData) return;
+    
+    const servis = currentNotaData;
+    const noTelp = servis.noTelp;
+    
+    if (!noTelp) {
+        alert("Nomor telepon pelanggan tidak tersedia! Silakan edit data servis dan tambahkan nomor telepon.");
+        return;
+    }
+    
+    // Tampilkan loading
+    const waBtn = document.getElementById("btnKirimWA");
+    const originalText = waBtn.innerHTML;
+    waBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengubah ke JPG...';
+    waBtn.disabled = true;
+    
+    try {
+        // Ambil elemen nota untuk diubah ke JPG
+        const notaElement = document.getElementById("notaJPGContainer");
+        if (!notaElement) {
+            throw new Error("Elemen nota tidak ditemukan");
+        }
+        
+        // Konfigurasi html2canvas dengan ukuran yang tepat
+        const canvas = await html2canvas(notaElement, {
+            scale: 2.5,
+            backgroundColor: '#ffffff',
+            logging: false,
+            useCORS: false,
+            windowWidth: notaElement.scrollWidth,
+            windowHeight: notaElement.scrollHeight,
+            onclone: (clonedDoc, element) => {
+                // Pastikan elemen clone memiliki style yang sama
+                const clonedNota = element.querySelector('#notaJPGContainer');
+                if (clonedNota) {
+                    clonedNota.style.margin = '0';
+                    clonedNota.style.padding = '35px 30px 45px 30px';
+                }
+            }
+        });
+        
+        // Convert ke blob JPG dengan kualitas tinggi
+        const jpgBlob = await new Promise(resolve => {
+            canvas.toBlob(resolve, 'image/jpeg', 0.95);
+        });
+        
+        // Buat file object
+        const fileName = `nota_${servis.id}_${new Date().getTime()}.jpg`;
+        const file = new File([jpgBlob], fileName, { type: 'image/jpeg' });
+        
+        // Format nomor WA
+        let waNumber = noTelp.replace(/\D/g, '');
+        if (waNumber.startsWith('0')) {
+            waNumber = '62' + waNumber.substring(1);
+        }
+        if (!waNumber.startsWith('62')) {
+            waNumber = '62' + waNumber;
+        }
+        
+        // Buat pesan teks yang lebih rapi
+        const message = `*🔧 I Cell *%0A%0A` +
+            `*ID Servis:* ${servis.id}%0A` +
+            `*Tanggal Masuk:* ${servis.tglMasuk || '-'} ${servis.jamMasuk || ''}%0A%0A` +
+            `_Terima kasih atas kepercayaan Anda._%0A` +
+            `📸 *Nota terlampir dalam bentuk gambar*`;
+        
+        // Buat URL WhatsApp
+        const waUrl = `https://wa.me/${waNumber}?text=${message}`;
+        
+        // Buka WhatsApp
+        window.open(waUrl, '_blank');
+        
+        // Download JPG juga untuk backup
+        const link = document.createElement('a');
+        link.download = fileName;
+        link.href = URL.createObjectURL(jpgBlob);
+        link.click();
+        URL.revokeObjectURL(link.href);
+        
+        alert(`✅ Nota berhasil dikonversi ke JPG!\n\nFile tersimpan: ${fileName}\n\nSilakan kirim gambar tersebut ke pelanggan melalui WhatsApp yang sudah terbuka.\n\n📌 Tips: Klik ikon 📎 (attach) di WhatsApp, pilih Gallery, lalu pilih gambar nota.`);
+        
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Gagal mengkonversi nota ke JPG: " + error.message + "\n\nCoba refresh halaman dan ulangi.");
+    } finally {
+        waBtn.innerHTML = originalText;
+        waBtn.disabled = false;
+    }
+}
+
+// ========== TEKNISI ==========
+function renderTeknisiTable() { 
+    const tbody = document.getElementById("teknisiTableBody"); 
+    if(!tbody) return; 
+    const search = document.getElementById("teknisiSearch")?.value.toLowerCase()||""; 
+    const statusFilter = document.getElementById("teknisiStatusFilter")?.value||"all";
+    let filtered = daftarServis.filter(s => 
+        (search === "" || s.id.toLowerCase().includes(search) || s.namaPelanggan.toLowerCase().includes(search) || s.model.toLowerCase().includes(search)) && 
+        (statusFilter === "all" || s.status === statusFilter)
+    ); 
+    if (filtered.length === 0) { 
+        tbody.innerHTML = "<tr><td colspan='8'>Tidak ada data servis</td></tr>"; 
+        return; 
+    }
+    tbody.innerHTML = filtered.map(s => `
+        <tr>
+            <td>${s.id}</td>
+            <td>${escapeHtml(s.namaPelanggan)}</td>
+            <td>${escapeHtml(s.model)}</td>
+            <td>Rp ${formatRupiah(s.estimasiBiaya)}</td>
+            <td>Rp ${formatRupiah(s.biayaModal)}</td>
+            <td>Rp ${formatRupiah((s.estimasiBiaya||0)-(s.biayaModal||0))}</td>
+            <td><span class="status-badge status-${(s.status||'antri').toLowerCase()}">${s.status}</span></td>
+            <td><button class="btn-teknisi" onclick="bukaTeknisi('${s.id}')"><i class="fas fa-wrench"></i> Edit</button></td>
+        </tr>
+    `).join(''); 
+}
+
+function bukaTeknisi(id) { 
+    const s = daftarServis.find(x=>x.id===id); 
+    if(s){ 
+        document.getElementById("teknisiEditId").value=s.id; 
+        document.getElementById("teknisiId").value=s.id; 
+        document.getElementById("teknisiPelanggan").value=s.namaPelanggan; 
+        document.getElementById("teknisiModel").value=s.model; 
+        document.getElementById("teknisiKeluhan").value=s.keluhan||"";
+        document.getElementById("teknisiEstimasiBiaya").value=s.estimasiBiaya||0; 
+        document.getElementById("teknisiBiayaModal").value=s.biayaModal||0; 
+        document.getElementById("teknisiEstimasiSelesai").value=s.estimasiSelesai||""; 
+        document.getElementById("teknisiStatus").value=s.status||"Antri"; 
+        document.getElementById("teknisiCatatan").value=s.catatanTeknisi||""; 
+        document.getElementById("teknisiModal").style.display="flex"; 
+    } 
+}
+
+async function simpanTeknisi() { 
+    const id = document.getElementById("teknisiEditId").value; 
+    const s = daftarServis.find(x=>x.id===id); 
+    if(s){ 
+        s.estimasiBiaya = parseInt(document.getElementById("teknisiEstimasiBiaya").value)||0; 
+        s.biayaModal = parseInt(document.getElementById("teknisiBiayaModal").value)||0; 
+        s.estimasiSelesai = document.getElementById("teknisiEstimasiSelesai").value; 
+        s.catatanTeknisi = document.getElementById("teknisiCatatan").value; 
+        s.status = document.getElementById("teknisiStatus").value; 
+        await saveServis(s); 
+        await loadDataFromDB(); 
+        closeTeknisiModal(); 
+        alert("✅ Servis diperbarui!"); 
+    } 
+}
+
+// ========== PELANGGAN ==========
+function renderPelangganTable() { 
+    const tbody = document.getElementById("pelangganTableBody"); 
+    if(!tbody) return; 
+    const search = document.getElementById("pelangganSearch")?.value.toLowerCase()||""; 
+    let filtered = daftarPelanggan.filter(p => p.nama.toLowerCase().includes(search) || (p.telp || '').includes(search)); 
+    if (filtered.length === 0) { 
+        tbody.innerHTML = "<tr><td colspan='5'>Tidak ada data pelanggan</td></tr>"; 
+        return; 
+    }
+    tbody.innerHTML = filtered.map(p => {
+        const servisPelanggan = daftarServis.filter(s => s.namaPelanggan === p.nama);
+        const totalServis = servisPelanggan.length;
+        return `
+            <tr>
+                <td>${escapeHtml(p.nama)}</td>
+                <td>${escapeHtml(p.telp||'-')}</td>
+                <td>${escapeHtml((p.alamat||'').substring(0,40))}</td>
+                <td>${totalServis}</td>
+                <td><i class="fas fa-edit" style="cursor:pointer;color:#3b82f6;" onclick="editPelangganFromList('${escapeHtml(p.nama)}')"></i> <i class="fas fa-trash" style="cursor:pointer;color:#ef4444;margin-left:8px;" onclick="hapusPelangganFromList('${escapeHtml(p.nama)}')"></i></td>
+            </tr>
+        `;
+    }).join(''); 
+}
+
+async function simpanPelangganFull() {
+    const namaBaru = document.getElementById('pelangganNama').value.trim();
+    const telp = document.getElementById('pelangganTelp').value.trim();
+    const alamat = document.getElementById('pelangganAlamat').value;
+    const namaLama = document.getElementById('editPelangganId').value;
+
+    if(!namaBaru || !telp){ alert("Lengkapi data nama dan telepon!"); return; }
+
+    // Jika sedang dalam mode edit dan namanya diubah, handle primary key ganti
+    if (namaLama && namaLama !== namaBaru) {
+        await deletePelanggan(namaLama);
+        
+        // Update otomatis nama pelanggan di semua transaksi servis terkait
+        let servisTerkait = daftarServis.filter(s => s.namaPelanggan === namaLama);
+        for(let s of servisTerkait) {
+            s.namaPelanggan = namaBaru;
+            await saveServis(s);
+        }
+    }
+
+    await savePelanggan({nama: namaBaru, telp, alamat});
+    await loadDataFromDB();
+    closePelangganModal();
+    alert("✅ Pelanggan tersimpan!");
+}
+
+async function editPelangganFromList(nama) { 
+    const p = daftarPelanggan.find(x=>x.nama===nama); 
+    if(p){ 
+        document.getElementById("editPelangganId").value=p.nama; 
+        document.getElementById("pelangganNama").value=p.nama; 
+        document.getElementById("pelangganTelp").value=p.telp||""; 
+        document.getElementById("pelangganAlamat").value=p.alamat||""; 
+        document.getElementById("pelangganModalTitle").innerHTML = "Edit Pelanggan";
+        document.getElementById("pelangganModal").style.display="flex"; 
+    } 
+}
+
+async function hapusPelangganFromList(nama) { 
+    if(confirm(`Hapus pelanggan "${nama}"? Data servis yang terkait tidak akan terhapus.`)){ 
+        await deletePelanggan(nama); 
+        await loadDataFromDB(); 
+        alert("✅ Pelanggan dihapus!"); 
+    } 
+}
+
+// ========== AUTOCOMPLETE PELANGGAN ==========
+function setupCustomerAutocomplete() {
+    const input = document.getElementById('namaPelanggan');
+    const suggestionsDiv = document.getElementById('customerSuggestions');
+    if (!input || !suggestionsDiv) return;
+    
+    input.addEventListener('input', function() {
+        const search = this.value.toLowerCase();
+        if (search.length < 1) {
+            suggestionsDiv.style.display = 'none';
+            return;
+        }
+        const filtered = daftarPelanggan.filter(p => p.nama.toLowerCase().includes(search));
+        if (filtered.length > 0) {
+            let html = filtered.map(p => `<div onclick="selectCustomer('${escapeHtml(p.nama)}', '${escapeHtml(p.telp || '')}', '${escapeHtml(p.alamat || '')}')">
+                <i class="fas fa-user"></i> ${escapeHtml(p.nama)} - ${escapeHtml(p.telp || '-')}
+            </div>`).join('');
+            html += `<div class="add-new" onclick="openQuickPelangganFromServis('${escapeHtml(search)}')">
+                <i class="fas fa-plus-circle"></i> ➕ Tambah pelanggan baru: "${escapeHtml(search)}"
+            </div>`;
+            suggestionsDiv.innerHTML = html;
+            suggestionsDiv.style.display = 'block';
+        } else {
+            suggestionsDiv.innerHTML = `<div class="add-new" onclick="openQuickPelangganFromServis('${escapeHtml(search)}')">
+                <i class="fas fa-plus-circle"></i> ➕ Tambah pelanggan baru: "${escapeHtml(search)}"
+            </div>`;
+            suggestionsDiv.style.display = 'block';
+        }
+    });
+    
+    document.addEventListener('click', function(e) {
+        if (!suggestionsDiv.contains(e.target) && e.target !== input) {
+            suggestionsDiv.style.display = 'none';
+        }
+    });
+}
+
+function selectCustomer(nama, telp, alamat) {
+    document.getElementById('namaPelanggan').value = nama;
+    document.getElementById('noTelp').value = telp;
+    document.getElementById('alamat').value = alamat;
+    document.getElementById('customerSuggestions').style.display = 'none';
+}
+
+function openQuickPelangganFromServis(namaHint) {
+    document.getElementById('quickNamaPelanggan').value = namaHint || '';
+    document.getElementById('quickNoTelp').value = '';
+    document.getElementById('quickAlamat').value = '';
+    document.getElementById('quickPelangganModal').style.display = 'flex';
+    document.getElementById('customerSuggestions').style.display = 'none';
+}
+
+async function simpanQuickPelanggan() {
+    const nama = document.getElementById('quickNamaPelanggan').value.trim();
+    const telp = document.getElementById('quickNoTelp').value.trim();
+    const alamat = document.getElementById('quickAlamat').value;
+    if (!nama) { alert('Nama pelanggan wajib diisi!'); return; }
+    if (!telp) { alert('No telepon wajib diisi!'); return; }
+    await savePelanggan({ nama: nama, telp: telp, alamat: alamat });
+    await loadDataFromDB();
+    closeQuickPelangganModal();
+    alert(`✅ Pelanggan "${nama}" berhasil ditambahkan!`);
+    document.getElementById('namaPelanggan').value = nama;
+    document.getElementById('noTelp').value = telp;
+    document.getElementById('alamat').value = alamat;
+}
+
+// ========== CRUD SERVIS ==========
+async function simpanServis() { 
+    const editId = document.getElementById("editId").value; 
+    const data = { 
+        id: editId || generateId(), 
+        namaPelanggan: document.getElementById("namaPelanggan").value.trim(), 
+        noTelp: document.getElementById("noTelp").value, 
+        alamat: document.getElementById("alamat").value, 
+        model: document.getElementById("modelHp").value.trim(), 
+        keluhan: document.getElementById("keluhan").value, 
+        estimasiBiaya: parseInt(document.getElementById("estimasiBiaya").value)||0, 
+        biayaModal: parseInt(document.getElementById("biayaModal").value)||0, 
+        tglMasuk: document.getElementById("tanggalMasuk").value, 
+        jamMasuk: document.getElementById("jamMasuk").value, 
+        estimasiSelesai: document.getElementById("estimasiSelesai").value, 
+        status: document.getElementById("statusServis").value, 
+        statusTransaksi: "Belum Diambil",
+        catatanTeknisi: document.getElementById("catatanTeknisi").value 
+    }; 
+    if(!data.namaPelanggan || !data.model || !data.tglMasuk || !data.estimasiSelesai){ alert("Lengkapi field wajib (Nama, Model, Tgl Masuk, Estimasi Selesai)!"); return; } 
+    
+    const existingPelanggan = daftarPelanggan.find(p=>p.nama===data.namaPelanggan); 
+    if(!existingPelanggan && data.namaPelanggan) { 
+        await savePelanggan({ nama: data.namaPelanggan, telp: data.noTelp, alamat: data.alamat }); 
+        await loadDataFromDB(); 
+    } 
+    
+    if(editId){ 
+        const existing = daftarServis.find(x=>x.id===editId); 
+        await saveServis({...existing,...data}); 
+        alert("✅ Data servis diupdate!"); 
+    } else { 
+        await saveServis(data); 
+        alert("✅ Servis baru diterima!");
+        setTimeout(() => {
+            if(confirm("Servis berhasil disimpan! Apakah ingin mencetak nota sekarang?")) {
+                cetakNota(data.id);
+            }
+        }, 500);
+    } 
+    await loadDataFromDB(); 
+    closeModal(); 
+}
+
+function editServis(id) { 
+    const s = daftarServis.find(x=>x.id===id); 
+    if(s){ 
+        document.getElementById("editId").value=s.id; 
+        document.getElementById("namaPelanggan").value=s.namaPelanggan||""; 
+        document.getElementById("noTelp").value=s.noTelp||""; 
+        document.getElementById("alamat").value=s.alamat||""; 
+        document.getElementById("modelHp").value=s.model||""; 
+        document.getElementById("keluhan").value=s.keluhan||""; 
+        document.getElementById("estimasiBiaya").value=s.estimasiBiaya||0; 
+        document.getElementById("biayaModal").value=s.biayaModal||0; 
+        document.getElementById("tanggalMasuk").value=s.tglMasuk||""; 
+        document.getElementById("jamMasuk").value=s.jamMasuk||"09:00"; 
+        document.getElementById("estimasiSelesai").value=s.estimasiSelesai||""; 
+        document.getElementById("statusServis").value=s.status||"Antri"; 
+        document.getElementById("catatanTeknisi").value=s.catatanTeknisi||""; 
+        document.getElementById("modalTitle").innerHTML="<i class='fas fa-edit'></i> Edit Servisan"; 
+        document.getElementById("servisModal").style.display="flex"; 
+    } 
+}
+
+async function hapusServis(id) { if(confirm("Hapus data ini?")){ await deleteServis(id); await loadDataFromDB(); alert("✅ Data dihapus!"); } }
+
+// ========== AMBIL SERVISAN ==========
+let selectedServisForAmbil = null;
+
+function renderAmbilSearchResults() { 
+    const search = document.getElementById("ambilSearch").value.toLowerCase(); 
+    const div = document.getElementById("ambilSearchResults"); 
+    if(!search){ div.style.display="none"; return; } 
+    let filtered = daftarServis.filter(s=>s.status==="Selesai" && s.statusTransaksi!=="Diambil" && (s.id.toLowerCase().includes(search)||s.namaPelanggan.toLowerCase().includes(search)||s.model.toLowerCase().includes(search))); 
+    if(filtered.length===0){ div.innerHTML="<div style='padding:10px;text-align:center;color:#6b7280;'>Tidak ada servis selesai yang ditemukan</div>"; div.style.display="block"; return; } 
+    div.innerHTML = filtered.map(s=>`<div style="padding:10px;border-bottom:1px solid #ddd;cursor:pointer;" onclick="selectAmbilServis('${s.id}')">
+        <strong>${s.id}</strong><br>
+        ${escapeHtml(s.namaPelanggan)} - ${escapeHtml(s.model)}<br>
+        <span style="color:#10b981;font-weight:bold;">Rp ${formatRupiah(s.estimasiBiaya)}</span>
+    </div>`).join(''); 
+    div.style.display="block"; 
+}
+
+function selectAmbilServis(id) { 
+    const s = daftarServis.find(x=>x.id===id); 
+    if(!s) return; 
+    selectedServisForAmbil=s; 
+    document.getElementById("ambilServisId").value=s.id; 
+    document.getElementById("ambilId").innerText=s.id; 
+    document.getElementById("ambilNama").innerText=s.namaPelanggan; 
+    document.getElementById("ambilModel").innerText=s.model; 
+    document.getElementById("ambilEstimasiBiaya").innerText=formatRupiah(s.estimasiBiaya); 
+    document.getElementById("uangDiterima").value=""; 
+    updateKembalian(); 
+    
+    // PERBAIKAN BUG WAKTU
+    const { tanggal, jam } = getCurrentDateTimeLocal();
+    document.getElementById("tglAmbil").value = tanggal;
+    document.getElementById("jamAmbil").value = jam;
+    
+    document.getElementById("diterimaOleh").value=""; 
+    document.getElementById("ambilSearchResults").style.display="none"; 
+    document.getElementById("ambilSearch").value=""; 
+}
+
+function updateKembalian() { 
+    const id = document.getElementById("ambilServisId").value; 
+    const s = selectedServisForAmbil || daftarServis.find(x=>x.id===id); 
+    if(!s || !s.estimasiBiaya) { 
+        document.getElementById("kembalianDisplay").innerHTML = "Rp 0"; 
+        document.getElementById("kembalianDisplay").className = "kembalian-positive";
+        return; 
+    } 
+    const total = s.estimasiBiaya; 
+    const uang = parseInt(document.getElementById("uangDiterima").value)||0; 
+    const kembali = uang - total; 
+    const el = document.getElementById("kembalianDisplay"); 
+    if(kembali >= 0){ 
+        el.innerHTML = `💰 Kembalian: Rp ${formatRupiah(kembali)} ${kembali>0 ? '' : '(Pas)'}`; 
+        el.className = "kembalian-positive"; 
+    } else { 
+        el.innerHTML = `⚠️ Kurang: Rp ${formatRupiah(Math.abs(kembali))}`; 
+        el.className = "kembalian-negative"; 
+    } 
+}
+
+function setUangPas() { 
+    const id = document.getElementById("ambilServisId").value; 
+    const s = selectedServisForAmbil || daftarServis.find(x=>x.id===id); 
+    if(s && s.estimasiBiaya){ 
+        document.getElementById("uangDiterima").value = s.estimasiBiaya; 
+        updateKembalian(); 
+    } else alert("Pilih servis terlebih dahulu!"); 
+}
+
+function openAmbilServisanModal() { 
+    document.getElementById("ambilServisId").value=""; 
+    document.getElementById("ambilId").innerText="-"; 
+    document.getElementById("ambilNama").innerText="-"; 
+    document.getElementById("ambilModel").innerText="-"; 
+    document.getElementById("ambilEstimasiBiaya").innerText="0"; 
+    document.getElementById("uangDiterima").value=""; 
+    document.getElementById("kembalianDisplay").innerHTML = "Rp 0"; 
+    document.getElementById("kembalianDisplay").className = "kembalian-positive";
+    document.getElementById("ambilSearch").value=""; 
+    document.getElementById("ambilSearchResults").style.display="none"; 
+    
+    // PERBAIKAN BUG WAKTU
+    const { tanggal, jam } = getCurrentDateTimeLocal();
+    document.getElementById("tglAmbil").value = tanggal;
+    document.getElementById("jamAmbil").value = jam;
+    
+    document.getElementById("diterimaOleh").value="";
+    selectedServisForAmbil=null; 
+    document.getElementById("ambilModal").style.display="flex"; 
+    setTimeout(() => document.getElementById("ambilSearch").focus(), 100);
+}
+
+async function konfirmasiPengambilan() { 
+    const id = document.getElementById("ambilServisId").value; 
+    const s = daftarServis.find(x=>x.id===id); 
+    if(!s){ alert("Pilih servis terlebih dahulu!"); return; } 
+    const uang = parseInt(document.getElementById("uangDiterima").value)||0; 
+    if(uang < (s.estimasiBiaya||0)){ alert(`Uang kurang!`); return; } 
+    s.statusTransaksi = "Diambil"; 
+    s.tglDiambil = document.getElementById("tglAmbil").value; 
+    s.jamDiambil = document.getElementById("jamAmbil").value; 
+    s.diterimaOleh = document.getElementById("diterimaOleh").value||"Admin"; 
+    s.uangDiterima = uang; 
+    s.kembalian = uang - s.estimasiBiaya; 
+    await saveServis(s); 
+    await loadDataFromDB(); 
+    closeAmbilModal(); 
+    alert(`✅ Servis ${id} telah diambil!\nKembalian: Rp ${formatRupiah(s.kembalian)}`); 
+}
+
+// ========== LAPORAN ==========
+function getPaidTransactions() { return daftarServis.filter(s => s.statusTransaksi === "Diambil"); }
+function getMonday(date) { const d = new Date(date); const day = d.getDay(); const diff = (day === 0 ? 6 : day - 1); d.setDate(d.getDate() - diff); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+function formatDateYMD(date) { return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`; }
+
+function updateDynamicFilter() {
+    const mode = document.getElementById("laporanMode").value;
+    const container = document.getElementById("dynamicFilter");
+    const today = new Date();
+    
+    // PERBAIKAN BUG WAKTU LAPORAN
+    const { tanggal } = getCurrentDateTimeLocal(); 
+    
+    if(mode === "daily") container.innerHTML = `<input type="date" id="dailyDate" value="${tanggal}" style="padding:8px 15px;border-radius:40px;border:1px solid #cbd5e1;">`;
+    else if(mode === "weekly") container.innerHTML = `<select id="weeklyOption" style="padding:8px 15px;border-radius:40px;"><option value="this">📅 Minggu Ini</option><option value="last">📅 Minggu Lalu</option><option value="month">📊 Bulan Ini (Per Minggu)</option></select>`;
+    else if(mode === "monthly") container.innerHTML = `<select id="monthlyMonth" style="padding:8px 15px;border-radius:40px;">${Array(12).fill().map((_,i)=>`<option value="${i+1}" ${i===today.getMonth()?'selected':''}>${new Date(2024,i,1).toLocaleString('id',{month:'long'})}</option>`).join('')}</select><input type="number" id="monthlyYear" value="${today.getFullYear()}" style="width:80px;padding:8px;border-radius:40px;">`;
+    else if(mode === "yearly") container.innerHTML = `<input type="number" id="yearlyYear" value="${today.getFullYear()}" style="padding:8px 15px;border-radius:40px;width:100px;">`;
+}
+
+function generateLaporan() {
+    const mode = document.getElementById("laporanMode").value;
+    if(mode === "daily") generateDailyReport();
+    else if(mode === "weekly") generateWeeklyReport();
+    else if(mode === "monthly") generateMonthlyReport();
+    else if(mode === "yearly") generateYearlyReport();
+}
+function generateDailyReport() {
+    const { tanggal } = getCurrentDateTimeLocal();
+    const date = document.getElementById("dailyDate")?.value || tanggal;
+    const transactions = getPaidTransactions().filter(s => s.tglDiambil === date);
+    const totalPendapatan = transactions.reduce((s,w)=>s+(w.estimasiBiaya||0),0);
+    const totalModal = transactions.reduce((s,w)=>s+(w.biayaModal||0),0);
+    document.getElementById("laporanStats").innerHTML = `<div class="stat-card"><div class="stat-value">${transactions.length}</div><div class="stat-label">Transaksi</div></div><div class="stat-card revenue-card"><div class="stat-value">Rp ${formatRupiah(totalPendapatan)}</div><div class="stat-label">Pendapatan</div></div><div class="stat-card"><div class="stat-value">Rp ${formatRupiah(totalModal)}</div><div class="stat-label">Modal</div></div><div class="stat-card profit-card"><div class="stat-value">Rp ${formatRupiah(totalPendapatan-totalModal)}</div><div class="stat-label">Keuntungan</div></div>`;
+    document.getElementById("laporanTableHead").innerHTML = `<tr><th>No</th><th>ID</th><th>Pelanggan</th><th>Model</th><th>Estimasi Biaya</th><th>Modal</th><th>Keuntungan</th><th>Jam Ambil</th></tr>`;
+    document.getElementById("laporanTableBody").innerHTML = transactions.map((s,idx)=>`<tr><td>${idx+1}</td><td>${s.id}</td><td>${escapeHtml(s.namaPelanggan)}</td><td>${escapeHtml(s.model)}</td><td>Rp ${formatRupiah(s.estimasiBiaya)}</td><td>Rp ${formatRupiah(s.biayaModal)}</td><td>Rp ${formatRupiah((s.estimasiBiaya||0)-(s.biayaModal||0))}</td><td>${s.jamDiambil||'-'}</td></tr>`).join('');
+}
+function generateWeeklyReport() {
+    const option = document.getElementById("weeklyOption")?.value || "this";
+    if(option === "month") { generateMonthlyWeeklyReport(); return; }
+    const today = new Date();
+    const targetDate = option === "this" ? today : new Date(today.setDate(today.getDate()-7));
+    const start = getMonday(targetDate);
+    const end = new Date(start); end.setDate(start.getDate() + 6);
+    const startStr = formatDateYMD(start), endStr = formatDateYMD(end);
+    const transactions = getPaidTransactions().filter(s => s.tglDiambil >= startStr && s.tglDiambil <= endStr);
+    const totalPendapatan = transactions.reduce((s,w)=>s+(w.estimasiBiaya||0),0);
+    const totalModal = transactions.reduce((s,w)=>s+(w.biayaModal||0),0);
+    document.getElementById("laporanStats").innerHTML = `<div class="stat-card weekly-card"><div class="stat-value">${startStr} s/d ${endStr}</div><div class="stat-label">Periode</div></div><div class="stat-card"><div class="stat-value">${transactions.length}</div><div class="stat-label">Transaksi</div></div><div class="stat-card revenue-card"><div class="stat-value">Rp ${formatRupiah(totalPendapatan)}</div><div class="stat-label">Pendapatan</div></div><div class="stat-card"><div class="stat-value">Rp ${formatRupiah(totalModal)}</div><div class="stat-label">Modal</div></div><div class="stat-card profit-card"><div class="stat-value">Rp ${formatRupiah(totalPendapatan-totalModal)}</div><div class="stat-label">Keuntungan</div></div>`;
+    document.getElementById("laporanTableHead").innerHTML = `<tr><th>No</th><th>ID</th><th>Pelanggan</th><th>Model</th><th>Estimasi Biaya</th><th>Modal</th><th>Keuntungan</th><th>Tgl Ambil</th></tr>`;
+    document.getElementById("laporanTableBody").innerHTML = transactions.map((s,idx)=>`<tr><td>${idx+1}</td><td>${s.id}</td><td>${escapeHtml(s.namaPelanggan)}</td><td>${escapeHtml(s.model)}</td><td>Rp ${formatRupiah(s.estimasiBiaya)}</td><td>Rp ${formatRupiah(s.biayaModal)}</td><td>Rp ${formatRupiah((s.estimasiBiaya||0)-(s.biayaModal||0))}</td><td>${s.tglDiambil}</td></tr>`).join('');
+}
+function generateMonthlyWeeklyReport() {
+    const now = new Date();
+    const year = now.getFullYear(), month = now.getMonth();
+    let current = getMonday(new Date(year, month, 1));
+    const weeklyData = [];
+    while(current.getMonth() === month) {
+        const end = new Date(current); end.setDate(current.getDate()+6);
+        const startStr = formatDateYMD(current), endStr = formatDateYMD(end);
+        const weekTrans = getPaidTransactions().filter(s => s.tglDiambil >= startStr && s.tglDiambil <= endStr);
+        const pendapatan = weekTrans.reduce((s,w)=>s+(w.estimasiBiaya||0),0);
+        const modal = weekTrans.reduce((s,w)=>s+(w.biayaModal||0),0);
+        weeklyData.push({ week: `Minggu ke-${Math.floor((current.getDate()-1)/7)+1} (${startStr} s/d ${endStr})`, jml: weekTrans.length, pendapatan, modal, profit: pendapatan-modal });
+        current.setDate(current.getDate()+7);
+    }
+    const totalPendapatan = weeklyData.reduce((s,w)=>s+w.pendapatan,0);
+    const totalModal = weeklyData.reduce((s,w)=>s+w.modal,0);
+    document.getElementById("laporanStats").innerHTML = `<div class="stat-card weekly-card"><div class="stat-value">${new Date(year,month).toLocaleString('id',{month:'long',year:'numeric'})}</div><div class="stat-label">Bulan Ini</div></div><div class="stat-card"><div class="stat-value">${weeklyData.reduce((s,w)=>s+w.jml,0)}</div><div class="stat-label">Total Transaksi</div></div><div class="stat-card revenue-card"><div class="stat-value">Rp ${formatRupiah(totalPendapatan)}</div><div class="stat-label">Pendapatan</div></div><div class="stat-card"><div class="stat-value">Rp ${formatRupiah(totalModal)}</div><div class="stat-label">Modal</div></div><div class="stat-card profit-card"><div class="stat-value">Rp ${formatRupiah(totalPendapatan-totalModal)}</div><div class="stat-label">Keuntungan</div></div>`;
+    document.getElementById("laporanTableHead").innerHTML = `<tr><th>Minggu</th><th>Transaksi</th><th>Pendapatan</th><th>Modal</th><th>Keuntungan</th></tr>`;
+    document.getElementById("laporanTableBody").innerHTML = weeklyData.map(w => `<tr><td>${w.week}</td><td>${w.jml}</td><td>Rp ${formatRupiah(w.pendapatan)}</td><td>Rp ${formatRupiah(w.modal)}</td><td>Rp ${formatRupiah(w.profit)}</td></tr>`).join('');
+}
+function generateMonthlyReport() {
+    const month = document.getElementById("monthlyMonth")?.value || (new Date().getMonth()+1);
+    const year = document.getElementById("monthlyYear")?.value || new Date().getFullYear();
+    const monthStr = `${year}-${String(month).padStart(2,'0')}`;
+    const transactions = getPaidTransactions().filter(s => s.tglDiambil?.startsWith(monthStr));
+    const totalPendapatan = transactions.reduce((s,w)=>s+(w.estimasiBiaya||0),0);
+    const totalModal = transactions.reduce((s,w)=>s+(w.biayaModal||0),0);
+    document.getElementById("laporanStats").innerHTML = `<div class="stat-card"><div class="stat-value">${new Date(year,month-1).toLocaleString('id',{month:'long',year:'numeric'})}</div><div class="stat-label">Periode</div></div><div class="stat-card"><div class="stat-value">${transactions.length}</div><div class="stat-label">Transaksi</div></div><div class="stat-card revenue-card"><div class="stat-value">Rp ${formatRupiah(totalPendapatan)}</div><div class="stat-label">Pendapatan</div></div><div class="stat-card"><div class="stat-value">Rp ${formatRupiah(totalModal)}</div><div class="stat-label">Modal</div></div><div class="stat-card profit-card"><div class="stat-value">Rp ${formatRupiah(totalPendapatan-totalModal)}</div><div class="stat-label">Keuntungan</div></div>`;
+    document.getElementById("laporanTableHead").innerHTML = `<table><th>No</th><th>ID</th><th>Pelanggan</th><th>Model</th><th>Estimasi Biaya</th><th>Modal</th><th>Keuntungan</th><th>Tgl Ambil</th></table>`;
+    document.getElementById("laporanTableBody").innerHTML = transactions.map((s,idx)=>`<tr><td>${idx+1}</td><td>${s.id}</td><td>${escapeHtml(s.namaPelanggan)}</td><td>${escapeHtml(s.model)}</td><td>Rp ${formatRupiah(s.estimasiBiaya)}</td><td>Rp ${formatRupiah(s.biayaModal)}</td><td>Rp ${formatRupiah((s.estimasiBiaya||0)-(s.biayaModal||0))}</td><td>${s.tglDiambil}</td></tr>`).join('');
+}
+function generateYearlyReport() {
+    const year = document.getElementById("yearlyYear")?.value || new Date().getFullYear();
+    const monthlyData = [];
+    for(let m=1; m<=12; m++) {
+        const monthStr = `${year}-${String(m).padStart(2,'0')}`;
+        const transactions = getPaidTransactions().filter(s => s.tglDiambil?.startsWith(monthStr));
+        const pendapatan = transactions.reduce((s,w)=>s+(w.estimasiBiaya||0),0);
+        const modal = transactions.reduce((s,w)=>s+(w.biayaModal||0),0);
+        monthlyData.push({ month: new Date(year,m-1,1).toLocaleString('id',{month:'long'}), jml: transactions.length, pendapatan, modal, profit: pendapatan-modal });
+    }
+    const totalTransaksi = monthlyData.reduce((s,m)=>s+m.jml,0);
+    const totalPendapatan = monthlyData.reduce((s,m)=>s+m.pendapatan,0);
+    const totalModal = monthlyData.reduce((s,m)=>s+m.modal,0);
+    document.getElementById("laporanStats").innerHTML = `<div class="stat-card yearly-card"><div class="stat-value">Tahun ${year}</div><div class="stat-label">Periode</div></div><div class="stat-card"><div class="stat-value">${totalTransaksi}</div><div class="stat-label">Total Transaksi</div></div><div class="stat-card revenue-card"><div class="stat-value">Rp ${formatRupiah(totalPendapatan)}</div><div class="stat-label">Pendapatan</div></div><div class="stat-card"><div class="stat-value">Rp ${formatRupiah(totalModal)}</div><div class="stat-label">Modal</div></div><div class="stat-card profit-card"><div class="stat-value">Rp ${formatRupiah(totalPendapatan-totalModal)}</div><div class="stat-label">Keuntungan</div></div>`;
+    document.getElementById("laporanTableHead").innerHTML = `<tr><th>Bulan</th><th>Transaksi</th><th>Pendapatan</th><th>Modal</th><th>Keuntungan</th></tr>`;
+    document.getElementById("laporanTableBody").innerHTML = monthlyData.map(m => `<tr><td>${m.month}</td><td>${m.jml}</td><td>Rp ${formatRupiah(m.pendapatan)}</td><td>Rp ${formatRupiah(m.modal)}</td><td>Rp ${formatRupiah(m.profit)}</td></tr>`).join('');
+}
+function exportLaporan() { alert("Gunakan tombol Export di menu Setting untuk backup data."); }
+
+// ========== ANALISA WAKTU ==========
+function renderAnalisa() {
+    const jamCount = Array(24).fill(0);
+    let total = 0;
+    daftarServis.forEach(s => {
+        if (s.jamMasuk && s.status !== "Dibatalkan") {
+            const jam = parseInt(s.jamMasuk.split(":")[0]);
+            if (!isNaN(jam) && jam >= 0 && jam < 24) { jamCount[jam]++; total++; }
+        }
+    });
+    let maxJam = 0, maxCount = 0; 
+    jamCount.forEach((c, i) => { if (c > maxCount) { maxCount = c; maxJam = i; } });
+    document.getElementById("jamTersibuk").innerHTML = `${maxJam}:00 - ${maxJam+1}:00<br><span style="font-size:0.7rem;">${maxCount} transaksi</span>`;
+    document.getElementById("totalJam").innerText = total;
+    const maxHeight = 120;
+    let chartHtml = '<div class="hour-chart">';
+    for (let i = 0; i < 24; i++) { 
+        let height = total > 0 ? (jamCount[i] / total) * maxHeight : 0; 
+        chartHtml += `<div style="display:flex;flex-direction:column;align-items:center;flex:1;">
+            <div class="hour-bar" style="height:${Math.max(height, 4)}px; background:${jamCount[i] > 0 ? '#3b82f6' : '#cbd5e1'}">${jamCount[i] > 0 ? jamCount[i] : ''}</div>
+            <div class="hour-label">${i}:00</div>
+        </div>`; 
+    }
+    chartHtml += '</div>'; 
+    document.getElementById("hourChart").innerHTML = chartHtml;
+}
+
+// ========== DEFAULT DATA ==========
+async function createDefaultData() {
+    await clearAllServis(); 
+    await clearAllPelanggan();
+    
+    const defaultPelanggan = [
+        { nama: "Andi Wijaya", telp: "081234567890", alamat: "Jl. Merdeka No. 10" },
+        { nama: "Siti Fatimah", telp: "082345678901", alamat: "Jl. Sudirman No. 5" },
+        { nama: "Budi Santoso", telp: "083456789012", alamat: "Jl. Thamrin No. 8" }
+    ];
+    for (const p of defaultPelanggan) await savePelanggan(p);
+    
+    const { tanggal, jam } = getCurrentDateTimeLocal();
+    const defaultServis = [
+        { id: generateId(), namaPelanggan: "Andi Wijaya", noTelp: "081234567890", model: "Xiaomi Redmi Note 10", keluhan: "LCD retak", estimasiBiaya: 350000, biayaModal: 180000, tglMasuk: tanggal, jamMasuk: jam, estimasiSelesai: "2024-12-20", status: "Antri", statusTransaksi: "Belum Diambil", catatanTeknisi: "Ganti LCD" },
+        { id: generateId(), namaPelanggan: "Siti Fatimah", noTelp: "082345678901", model: "iPhone 12", keluhan: "Batre habis", estimasiBiaya: 450000, biayaModal: 250000, tglMasuk: tanggal, jamMasuk: jam, estimasiSelesai: "2024-12-21", status: "Proses", statusTransaksi: "Belum Diambil", catatanTeknisi: "Ganti baterai original" },
+        { id: generateId(), namaPelanggan: "Budi Santoso", noTelp: "083456789012", model: "Samsung S21", keluhan: "Tidak bisa charge", estimasiBiaya: 280000, biayaModal: 150000, tglMasuk: "2024-12-14", jamMasuk: "13:45", estimasiSelesai: "2024-12-19", status: "Selesai", statusTransaksi: "Belum Diambil", catatanTeknisi: "Diagnosa charger port" }
+    ];
+    for (const s of defaultServis) await saveServis(s);
+    
+    await loadDataFromDB();
+    alert("✅ Database default dibuat dengan 3 pelanggan dan 3 servis!");
+}
+
+async function exportAllData() { 
+    const data = daftarServis.map(s => ({ 
+        ID: s.id, 
+        Pelanggan: s.namaPelanggan, 
+        NoTelp: s.noTelp,
+        Alamat: s.alamat,
+        Model: s.model, 
+        Keluhan: s.keluhan, 
+        EstimasiBiaya: s.estimasiBiaya, 
+        Modal: s.biayaModal, 
+        Status: s.status, 
+        Transaksi: s.statusTransaksi || "Belum Diambil",
+        TglMasuk: s.tglMasuk, 
+        JamMasuk: s.jamMasuk,
+        EstimasiSelesai: s.estimasiSelesai,
+        TglDiambil: s.tglDiambil || "" 
+    })); 
+    const ws = XLSX.utils.json_to_sheet(data); 
+    const wb = XLSX.utils.book_new(); 
+    XLSX.utils.book_append_sheet(wb, ws, "DataServis"); 
+    XLSX.writeFile(wb, `ServisHP_Backup_${new Date().toISOString().slice(0,10)}.xlsx`); 
+    alert("✅ Export berhasil!"); 
+}
+
+async function importFromExcel(file) { 
+    const reader = new FileReader(); 
+    reader.onload = async function(e) { 
+        const wb = XLSX.read(e.target.result, { type: 'array' }); 
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]); 
+        await clearAllServis(); 
+        
+        // PERBAIKAN BUG WAKTU IMPORT EXCEL
+        const { tanggal, jam } = getCurrentDateTimeLocal();
+        
+        for(const row of rows) { 
+            await saveServis({ 
+                id: row.id || row.ID || generateId(), 
+                namaPelanggan: row.Pelanggan || row.namaPelanggan,
+                noTelp: row.NoTelp || row.noTelp || "",
+                alamat: row.Alamat || row.alamat || "",
+                model: row.Model || row.model, 
+                keluhan: row.Keluhan || row.keluhan, 
+                estimasiBiaya: row.EstimasiBiaya || row.estimasiBiaya || 0, 
+                biayaModal: row.Modal || row.biayaModal || 0, 
+                status: row.Status || row.status || "Antri", 
+                statusTransaksi: row.Transaksi || row.statusTransaksi || "Belum Diambil", 
+                tglMasuk: row.TglMasuk || row.tglMasuk || tanggal, 
+                jamMasuk: row.JamMasuk || row.jamMasuk || jam,
+                estimasiSelesai: row.EstimasiSelesai || row.estimasiSelesai || ""
+            }); 
+        } 
+        await loadDataFromDB(); 
+        alert(`✅ Import ${rows.length} data berhasil!`); 
+    }; 
+    reader.readAsArrayBuffer(file); 
+}
+
+// ========== RESET FORM ==========
+function resetTerimaServisanForm() {
+    document.getElementById("editId").value = "";
+    document.getElementById("namaPelanggan").value = "";
+    document.getElementById("noTelp").value = "";
+    document.getElementById("alamat").value = "";
+    document.getElementById("modelHp").value = "";
+    document.getElementById("keluhan").value = "";
+    document.getElementById("estimasiBiaya").value = "";
+    document.getElementById("biayaModal").value = "";
+    document.getElementById("estimasiSelesai").value = "";
+    document.getElementById("statusServis").value = "Antri";
+    document.getElementById("catatanTeknisi").value = "";
+    setCurrentDateTimeToForm();
+    document.getElementById("modalTitle").innerHTML = "<i class='fas fa-clipboard-list'></i> Terima Servisan Baru";
+}
+
+// ========== MODAL CONTROLS ==========
+function closeModal() { document.getElementById("servisModal").style.display = "none"; }
+function closeAmbilModal() { document.getElementById("ambilModal").style.display = "none"; selectedServisForAmbil = null; }
+function closeTeknisiModal() { document.getElementById("teknisiModal").style.display = "none"; }
+function closePelangganModal() { document.getElementById("pelangganModal").style.display = "none"; }
+function closeQuickPelangganModal() { document.getElementById("quickPelangganModal").style.display = "none"; }
+function closeNotaModal() { document.getElementById("notaModal").style.display = "none"; currentNotaData = null; }
+
+// ========== INITIALIZATION ==========
+document.addEventListener("DOMContentLoaded", async () => {
+    setCurrentDateTimeToForm();
+    
+    await openDB();
+    await loadDataFromDB();
+    setupCustomerAutocomplete();
+    updateDynamicFilter();
+    
+    // ========== TAB NAVIGATION ==========
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tabId = this.getAttribute('data-tab');
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            const targetTab = document.getElementById(`tab-${tabId}`);
+            if (targetTab) targetTab.classList.add('active');
+            
+            if (tabId === 'data') renderDataTable();
+            else if (tabId === 'teknisi') renderTeknisiTable();
+            else if (tabId === 'pelanggan') renderPelangganTable();
+            else if (tabId === 'laporan') generateLaporan();
+            else if (tabId === 'analisa') renderAnalisa();
+        });
+    });
+    
+    // ========== TOMBOL ==========
+    document.getElementById("openTerimaServisanBtn").onclick = () => { 
+        resetTerimaServisanForm();
+        document.getElementById("servisModal").style.display = "flex"; 
+        document.getElementById("namaPelanggan").focus();
+    };
+    
+    document.getElementById("btnSimpanModal").onclick = simpanServis;
+    document.getElementById("btnBatalModal").onclick = closeModal;
+    document.getElementById("btnSimpanQuickPelanggan").onclick = simpanQuickPelanggan;
+    document.getElementById("btnBatalQuickPelanggan").onclick = closeQuickPelangganModal;
+    document.getElementById("openAmbilServisanBtn").onclick = openAmbilServisanModal;
+    document.getElementById("btnKonfirmasiAmbil").onclick = konfirmasiPengambilan;
+    document.getElementById("btnSetUangPas").onclick = setUangPas;
+    document.getElementById("uangDiterima").oninput = updateKembalian;
+    document.getElementById("ambilSearch").oninput = renderAmbilSearchResults;
+    document.getElementById("btnBatalAmbil").onclick = closeAmbilModal;
+    document.getElementById("btnSimpanTeknisi").onclick = simpanTeknisi;
+    document.getElementById("btnBatalTeknisi").onclick = closeTeknisiModal;
+    
+    document.getElementById("openPelangganModalBtn").onclick = () => { 
+        document.getElementById("editPelangganId").value = "";
+        document.getElementById("pelangganNama").value = "";
+        document.getElementById("pelangganTelp").value = "";
+        document.getElementById("pelangganAlamat").value = "";
+        document.getElementById("pelangganModalTitle").innerHTML = "Tambah Pelanggan Baru";
+        document.getElementById("pelangganModal").style.display = "flex"; 
+    };
+    document.getElementById("btnSimpanPelanggan").onclick = simpanPelangganFull;
+    document.getElementById("btnBatalPelanggan").onclick = closePelangganModal;
+    
+    // Filter & Search
+    document.getElementById("resetSearchBtn").onclick = () => { 
+        document.getElementById("searchInput").value = ""; 
+        document.getElementById("searchIdInput").value = "";
+        document.getElementById("filterStatusPengerjaan").value = "all"; 
+        renderDataTable(); 
+    };
+    document.getElementById("resetTeknisiFilter").onclick = () => { 
+        document.getElementById("teknisiSearch").value = ""; 
+        document.getElementById("teknisiStatusFilter").value = "all"; 
+        renderTeknisiTable(); 
+    };
+    
+    document.getElementById("searchInput").oninput = renderDataTable;
+    document.getElementById("searchIdInput").oninput = renderDataTable;
+    document.getElementById("filterStatusPengerjaan").onchange = renderDataTable;
+    document.getElementById("teknisiSearch").oninput = renderTeknisiTable;
+    document.getElementById("teknisiStatusFilter").onchange = renderTeknisiTable;
+    document.getElementById("pelangganSearch").oninput = renderPelangganTable;
+    
+    // Export/Import
+    document.getElementById("exportDataBtn").onclick = exportAllData;
+    document.getElementById("importExcelBtn").onclick = () => { 
+        const file = document.getElementById("excelFileInput").files[0]; 
+        if(file) importFromExcel(file); 
+        else alert("Pilih file Excel!"); 
+    };
+    document.getElementById("useDefaultBtn").onclick = createDefaultData;
+    document.getElementById("resetDatabaseBtn").onclick = async () => { 
+        if(confirm("Hapus semua data? Data tidak dapat dikembalikan!")){ 
+            await clearAllServis(); 
+            await clearAllPelanggan(); 
+            await loadDataFromDB(); 
+            alert("✅ Database kosong!"); 
+        } 
+    };
+    
+    // Laporan
+    document.getElementById("laporanMode").onchange = () => { updateDynamicFilter(); generateLaporan(); };
+    document.getElementById("generateLaporanBtn").onclick = generateLaporan;
+    document.getElementById("exportLaporanBtn").onclick = exportLaporan;
+    
+    // Nota Modal Buttons
+    document.getElementById("btnCetakThermal").onclick = cetakThermal;
+    document.getElementById("btnKirimWA").onclick = kirimNotaWA;
+    document.getElementById("btnTutupNota").onclick = closeNotaModal;
+    
+    generateLaporan();
+    renderAnalisa();
+    setInterval(updateCurrentDateTimeDisplay, 1000);
+    
+    console.log("Aplikasi siap digunakan dengan fitur nota JPG dan perbaikan zona waktu!");
+});
+</script>
+</body>
+</html>
