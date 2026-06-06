@@ -590,7 +590,7 @@ function renderDataTable() {
         (search === "" || s.namaPelanggan.toLowerCase().includes(search) || s.model.toLowerCase().includes(search)) &&
         (filterP === "all" || s.status === filterP)
     );
-    if (filtered.length === 0) { tbody.innerHTML = "<tr><td colspan='12'>Tidak ada data</td></tr>"; return; }
+    if (filtered.length === 0) { tbody.innerHTML = "<tr><td colspan='12'>Tidak ada数据</tr>"; return; }
     tbody.innerHTML = filtered.map((item, idx) => `
         <tr>
             <td>${idx+1}</td>
@@ -889,7 +889,7 @@ function renderPelangganTable() {
                 <td>${escapeHtml(p.telp||'-')}</td>
                 <td>${escapeHtml((p.alamat||'').substring(0,40))}</td>
                 <td>${totalServis}</td>
-                <td><i class="fas fa-edit" style="cursor:pointer;color:#3b82f6;" onclick="editPelangganFromList(${JSON.stringify(p.nama)})"></i> <i class="fas fa-trash" style="cursor:pointer;color:#ef4444;margin-left:8px;" onclick="hapusPelangganFromList(${JSON.stringify(p.nama)})"></i></td>
+                <td><i class="fas fa-edit" style="cursor:pointer;color:#3b82f6;" onclick="editPelangganFromList('${p.nama.replace(/'/g, "\\'")}')"></i> <i class="fas fa-trash" style="cursor:pointer;color:#ef4444;margin-left:8px;" onclick="hapusPelangganFromList('${p.nama.replace(/'/g, "\\'")}')"></i></td>
             </tr>
         `;
     }).join(''); 
@@ -903,7 +903,7 @@ async function simpanPelangganFull() {
 
     if(!namaBaru || !telp){ alert("Lengkapi data nama dan telepon!"); return; }
 
-    // Jika sedang dalam mode edit dan namanya diubah, handle primary key ganti
+    // Jika dalam mode edit dan namanya diubah, handle primary key ganti
     if (namaLama && namaLama !== namaBaru) {
         await deletePelanggan(namaLama);
         
@@ -1024,9 +1024,20 @@ async function simpanServis() {
         jamMasuk: document.getElementById("jamMasuk").value, 
         estimasiSelesai: document.getElementById("estimasiSelesai").value, 
         status: document.getElementById("statusServis").value, 
-        await saveServis({...existing, ...data, statusTransaksi: existing.statusTransaksi});
         catatanTeknisi: document.getElementById("catatanTeknisi").value 
     }; 
+    
+    if(editId){ 
+        const existing = daftarServis.find(x=>x.id===editId); 
+        if(existing) {
+            data.statusTransaksi = existing.statusTransaksi;
+        } else {
+            data.statusTransaksi = "Belum Diambil";
+        }
+    } else {
+        data.statusTransaksi = "Belum Diambil";
+    }
+    
     if(!data.namaPelanggan || !data.model || !data.tglMasuk || !data.estimasiSelesai){ alert("Lengkapi field wajib (Nama, Model, Tgl Masuk, Estimasi Selesai)!"); return; } 
     
     const existingPelanggan = daftarPelanggan.find(p=>p.nama===data.namaPelanggan); 
@@ -1036,21 +1047,22 @@ async function simpanServis() {
     } 
     
     if(editId){ 
-    const existing = daftarServis.find(x=>x.id===editId); 
-    await saveServis({...existing,...data}); 
-    await loadDataFromDB(); 
-    closeModal();
-    alert("✅ Data servis diupdate!"); 
-} else { 
-    await saveServis(data); 
-    await loadDataFromDB(); 
-    closeModal();
-    alert("✅ Servis baru diterima!");
-    setTimeout(() => {
-        if(confirm("Servis berhasil disimpan! Apakah ingin mencetak nota sekarang?")) {
-            cetakNota(data.id);
-        }
-    }, 500); 
+        const existing = daftarServis.find(x=>x.id===editId); 
+        await saveServis({...existing, ...data}); 
+        await loadDataFromDB(); 
+        closeModal();
+        alert("✅ Data servis diupdate!"); 
+    } else { 
+        await saveServis(data); 
+        await loadDataFromDB(); 
+        closeModal();
+        alert("✅ Servis baru diterima!");
+        setTimeout(() => {
+            if(confirm("Servis berhasil disimpan! Apakah ingin mencetak nota sekarang?")) {
+                cetakNota(data.id);
+            }
+        }, 500); 
+    }
 }
 
 function editServis(id) { 
@@ -1241,19 +1253,19 @@ function generateMonthlyWeeklyReport() {
     const now = new Date();
     const year = now.getFullYear(), month = now.getMonth();
     let current = new Date(year, month, 1);
-const weeklyData = [];
-let mingguKe = 1;
-while(current.getMonth() === month) {
-    const start = getMonday(new Date(current));
-    const end = new Date(start); end.setDate(start.getDate()+6);
-    const startStr = formatDateYMD(start), endStr = formatDateYMD(end);
-    const weekTrans = getPaidTransactions().filter(s => s.tglDiambil >= startStr && s.tglDiambil <= endStr);
-    const pendapatan = weekTrans.reduce((s,w)=>s+(w.estimasiBiaya||0),0);
-    const modal = weekTrans.reduce((s,w)=>s+(w.biayaModal||0),0);
-    weeklyData.push({ week: `Minggu ke-${mingguKe} (${startStr} s/d ${endStr})`, jml: weekTrans.length, pendapatan, modal, profit: pendapatan-modal });
-    current.setDate(current.getDate()+7);
-    mingguKe++;
-}
+    const weeklyData = [];
+    let mingguKe = 1;
+    while(current.getMonth() === month) {
+        const start = getMonday(new Date(current));
+        const end = new Date(start); end.setDate(start.getDate()+6);
+        const startStr = formatDateYMD(start), endStr = formatDateYMD(end);
+        const weekTrans = getPaidTransactions().filter(s => s.tglDiambil >= startStr && s.tglDiambil <= endStr);
+        const pendapatan = weekTrans.reduce((s,w)=>s+(w.estimasiBiaya||0),0);
+        const modal = weekTrans.reduce((s,w)=>s+(w.biayaModal||0),0);
+        weeklyData.push({ week: `Minggu ke-${mingguKe} (${startStr} s/d ${endStr})`, jml: weekTrans.length, pendapatan, modal, profit: pendapatan-modal });
+        current.setDate(current.getDate()+7);
+        mingguKe++;
+    }
     const totalPendapatan = weeklyData.reduce((s,w)=>s+w.pendapatan,0);
     const totalModal = weeklyData.reduce((s,w)=>s+w.modal,0);
     document.getElementById("laporanStats").innerHTML = `<div class="stat-card weekly-card"><div class="stat-value">${new Date(year,month).toLocaleString('id',{month:'long',year:'numeric'})}</div><div class="stat-label">Bulan Ini</div></div><div class="stat-card"><div class="stat-value">${weeklyData.reduce((s,w)=>s+w.jml,0)}</div><div class="stat-label">Total Transaksi</div></div><div class="stat-card revenue-card"><div class="stat-value">Rp ${formatRupiah(totalPendapatan)}</div><div class="stat-label">Pendapatan</div></div><div class="stat-card"><div class="stat-value">Rp ${formatRupiah(totalModal)}</div><div class="stat-label">Modal</div></div><div class="stat-card profit-card"><div class="stat-value">Rp ${formatRupiah(totalPendapatan-totalModal)}</div><div class="stat-label">Keuntungan</div></div>`;
@@ -1371,29 +1383,49 @@ async function importFromExcel(file) {
         const wb = XLSX.read(e.target.result, { type: 'array' }); 
         const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]); 
         await clearAllServis();
-await clearAllPelanggan();
+        await clearAllPelanggan();
 
-// PERBAIKAN BUG WAKTU IMPORT EXCEL
-const { tanggal, jam } = getCurrentDateTimeLocal();
+        const { tanggal, jam } = getCurrentDateTimeLocal();
 
-for(const row of rows) { 
-    await saveServis({...});
-    
-    // Rebuild data pelanggan dari data servis
-    const namaPelanggan = row.Pelanggan || row.namaPelanggan;
-    if (namaPelanggan) {
-        const sudahAda = daftarPelanggan.find(p => p.nama === namaPelanggan);
-        if (!sudahAda) {
-            await savePelanggan({
-                nama: namaPelanggan,
-                telp: row.NoTelp || row.noTelp || "",
-                alamat: row.Alamat || row.alamat || ""
-            });
-        }
-    }
-} 
-await loadDataFromDB(); 
-alert(`✅ Import ${rows.length} data berhasil!`); 
+        for(const row of rows) { 
+            const servisData = {
+                id: row.ID || row.id || generateId(),
+                namaPelanggan: row.Pelanggan || row.namaPelanggan,
+                noTelp: row.NoTelp || row.noTelp || "",
+                alamat: row.Alamat || row.alamat || "",
+                model: row.Model || row.model,
+                keluhan: row.Keluhan || row.keluhan || "",
+                estimasiBiaya: row.EstimasiBiaya || row.estimasiBiaya || 0,
+                biayaModal: row.Modal || row.biayaModal || 0,
+                status: row.Status || row.status || "Antri",
+                statusTransaksi: row.Transaksi || row.statusTransaksi || "Belum Diambil",
+                tglMasuk: row.TglMasuk || row.tglMasuk || tanggal,
+                jamMasuk: row.JamMasuk || row.jamMasuk || jam,
+                estimasiSelesai: row.EstimasiSelesai || row.estimasiSelesai || "",
+                catatanTeknisi: row.CatatanTeknisi || row.catatanTeknisi || "",
+                tglDiambil: row.TglDiambil || row.tglDiambil || "",
+                jamDiambil: row.jamDiambil || "",
+                diterimaOleh: row.diterimaOleh || "",
+                uangDiterima: row.uangDiterima || 0,
+                kembalian: row.kembalian || 0
+            };
+            await saveServis(servisData);
+            
+            // Rebuild data pelanggan dari data servis
+            const namaPelanggan = servisData.namaPelanggan;
+            if (namaPelanggan) {
+                const sudahAda = daftarPelanggan.find(p => p.nama === namaPelanggan);
+                if (!sudahAda) {
+                    await savePelanggan({
+                        nama: namaPelanggan,
+                        telp: servisData.noTelp,
+                        alamat: servisData.alamat
+                    });
+                }
+            }
+        } 
+        await loadDataFromDB(); 
+        alert(`✅ Import ${rows.length} data berhasil!`); 
     }; 
     reader.readAsArrayBuffer(file); 
 }
