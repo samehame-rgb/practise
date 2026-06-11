@@ -1,0 +1,912 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);font-size:14px;color:var(--color-text-primary);background:var(--color-background-tertiary)}
+.app{display:flex;height:100vh;min-height:700px;overflow:hidden}
+.sidebar{width:220px;min-width:220px;background:var(--color-background-primary);border-right:0.5px solid var(--color-border-tertiary);display:flex;flex-direction:column;overflow-y:auto}
+.sidebar-logo{padding:1rem 1.25rem;border-bottom:0.5px solid var(--color-border-tertiary)}
+.sidebar-logo h1{font-size:15px;font-weight:500;color:var(--color-text-primary)}
+.sidebar-logo p{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.nav-section{padding:0.75rem 0}
+.nav-label{font-size:10px;font-weight:500;color:var(--color-text-tertiary);padding:0 1.25rem;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.06em}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 1.25rem;cursor:pointer;font-size:13px;color:var(--color-text-secondary);transition:background .1s}
+.nav-item:hover{background:var(--color-background-secondary);color:var(--color-text-primary)}
+.nav-item.active{background:var(--color-background-secondary);color:var(--color-text-primary);font-weight:500}
+.nav-item i{font-size:16px;opacity:.7}
+.nav-item.active i{opacity:1}
+.badge-count{margin-left:auto;background:var(--color-background-danger);color:var(--color-text-danger);font-size:10px;font-weight:500;padding:1px 6px;border-radius:10px}
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1.5rem;background:var(--color-background-primary);border-bottom:0.5px solid var(--color-border-tertiary);position:sticky;top:0;z-index:10}
+.topbar-title{font-size:15px;font-weight:500}
+.topbar-actions{display:flex;gap:8px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:var(--border-radius-md);font-size:13px;cursor:pointer;border:0.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-primary);transition:background .1s}
+.btn:hover{background:var(--color-background-secondary)}
+.btn-primary{background:#185FA5;color:#fff;border-color:#185FA5}
+.btn-primary:hover{background:#0C447C}
+.btn-sm{padding:4px 10px;font-size:12px}
+.content{padding:1.5rem;flex:1}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.5rem}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:1.5rem}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.5rem}
+.metric{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:1rem}
+.metric-label{font-size:11px;color:var(--color-text-secondary);margin-bottom:6px}
+.metric-val{font-size:22px;font-weight:500}
+.metric-sub{font-size:11px;color:var(--color-text-secondary);margin-top:4px}
+.metric-val.green{color:#1D9E75}
+.metric-val.amber{color:#BA7517}
+.metric-val.red{color:#E24B4A}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:1rem}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.card-title{font-size:13px;font-weight:500}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:8px 10px;font-weight:500;font-size:11px;color:var(--color-text-secondary);border-bottom:0.5px solid var(--color-border-tertiary);white-space:nowrap}
+td{padding:8px 10px;border-bottom:0.5px solid var(--color-border-tertiary);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--color-background-secondary)}
+.status-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500;white-space:nowrap}
+.s-waiting{background:#FAEEDA;color:#854F0B}
+.s-diag{background:#E6F1FB;color:#185FA5}
+.s-approval{background:#EEEDFE;color:#534AB7}
+.s-repair{background:#EAF3DE;color:#3B6D11}
+.s-qc{background:#FAEEDA;color:#633806}
+.s-done{background:#E1F5EE;color:#0F6E56}
+.s-taken{background:#F1EFE8;color:#5F5E5A}
+.s-cancel{background:#FCEBEB;color:#A32D2D}
+.s-warranty{background:#FBEAF0;color:#993556}
+.s-nofix{background:#F1EFE8;color:#444441}
+.dot{width:6px;height:6px;border-radius:50%}
+.dot-waiting{background:#BA7517}
+.dot-diag{background:#185FA5}
+.dot-repair{background:#3B6D11}
+.dot-done{background:#0F6E56}
+.dot-cancel{background:#A32D2D}
+input[type=text],input[type=number],input[type=tel],select,textarea{width:100%;padding:7px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:13px;background:var(--color-background-primary);color:var(--color-text-primary)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.form-group{margin-bottom:12px}
+.form-label{font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:4px;display:block}
+.form-label span{color:#E24B4A}
+.queue-display{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1rem}
+.queue-card{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem;text-align:center}
+.queue-num{font-size:32px;font-weight:500;margin-bottom:4px}
+.queue-type{font-size:11px;color:var(--color-text-secondary)}
+.queue-num.active{color:#185FA5}
+.queue-num.waiting{color:#BA7517}
+.avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0}
+.av-blue{background:#E6F1FB;color:#185FA5}
+.av-teal{background:#E1F5EE;color:#0F6E56}
+.av-amber{background:#FAEEDA;color:#854F0B}
+.timeline{padding-left:1rem}
+.timeline-item{display:flex;gap:12px;margin-bottom:1rem;position:relative}
+.timeline-item:before{content:'';position:absolute;left:-0.5rem;top:20px;width:0.5px;height:calc(100% + 4px);background:var(--color-border-tertiary)}
+.timeline-item:last-child:before{display:none}
+.tl-dot{width:8px;height:8px;border-radius:50%;background:#185FA5;flex-shrink:0;margin-top:4px}
+.tl-content{flex:1}
+.tl-title{font-size:13px;font-weight:500}
+.tl-time{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.progress-bar{height:4px;border-radius:2px;background:var(--color-background-secondary);overflow:hidden;margin-top:6px}
+.progress-fill{height:100%;border-radius:2px;background:#185FA5}
+.tab-bar{display:flex;gap:0;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:1rem}
+.tab{padding:8px 16px;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;color:var(--color-text-secondary)}
+.tab.active{color:var(--color-text-primary);border-bottom-color:#185FA5;font-weight:500}
+.section-title{font-size:13px;font-weight:500;margin-bottom:.75rem;color:var(--color-text-secondary)}
+.checklist-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:13px}
+.checklist-item:last-child{border-bottom:none}
+.check-icon.ok{color:#1D9E75}
+.check-icon.fail{color:#E24B4A}
+.check-icon.pending{color:var(--color-text-tertiary)}
+.stock-low{color:#E24B4A}
+.stock-ok{color:#1D9E75}
+.stock-med{color:#BA7517}
+.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;z-index:100}
+.modal{background:var(--color-background-primary);border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-tertiary);width:560px;max-height:85vh;overflow-y:auto;padding:1.25rem}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:0.5px solid var(--color-border-tertiary)}
+.modal-title{font-size:15px;font-weight:500}
+.close-btn{cursor:pointer;color:var(--color-text-secondary);font-size:18px;background:none;border:none;padding:4px}
+.inline-badge{display:inline-flex;align-items:center;gap:4px;padding:1px 7px;border-radius:8px;font-size:11px}
+.empty-state{text-align:center;padding:3rem;color:var(--color-text-secondary)}
+.empty-state i{font-size:32px;margin-bottom:.5rem;opacity:.4}
+.search-bar{display:flex;align-items:center;gap:8px;padding:0 0 1rem}
+.search-bar input{flex:1}
+.filter-row{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.filter-chip{padding:4px 12px;border-radius:20px;font-size:12px;border:0.5px solid var(--color-border-secondary);cursor:pointer;background:transparent;color:var(--color-text-secondary)}
+.filter-chip.active{background:var(--color-background-secondary);color:var(--color-text-primary);border-color:var(--color-border-primary);font-weight:500}
+</style>
+
+<div class="app" id="root">
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <h1>ServisHP Pro</h1>
+      <p>MAIN · 1 outlet aktif</p>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Utama</div>
+      <div class="nav-item active" onclick="nav('dashboard')"><i class="ti ti-layout-dashboard" aria-hidden="true"></i>Dashboard</div>
+      <div class="nav-item" onclick="nav('antrian')"><i class="ti ti-list-numbers" aria-hidden="true"></i>Antrian <span class="badge-count" id="badge-antrian">5</span></div>
+      <div class="nav-item" onclick="nav('servis')"><i class="ti ti-tool" aria-hidden="true"></i>Data Servis <span class="badge-count" id="badge-servis">3</span></div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Operasional</div>
+      <div class="nav-item" onclick="nav('teknisi')"><i class="ti ti-device-mobile" aria-hidden="true"></i>Teknisi</div>
+      <div class="nav-item" onclick="nav('qc')"><i class="ti ti-checkup-list" aria-hidden="true"></i>Quality Control</div>
+      <div class="nav-item" onclick="nav('kasir')"><i class="ti ti-cash" aria-hidden="true"></i>Kasir & Pembayaran</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Manajemen</div>
+      <div class="nav-item" onclick="nav('stok')"><i class="ti ti-package" aria-hidden="true"></i>Stok Sparepart</div>
+      <div class="nav-item" onclick="nav('garansi')"><i class="ti ti-shield-check" aria-hidden="true"></i>Garansi</div>
+      <div class="nav-item" onclick="nav('laporan')"><i class="ti ti-chart-bar" aria-hidden="true"></i>Laporan</div>
+      <div class="nav-item" onclick="nav('pelanggan')"><i class="ti ti-users" aria-hidden="true"></i>Pelanggan</div>
+    </div>
+  </div>
+
+  <div class="main" id="main-content">
+    <!-- DASHBOARD -->
+    <div id="page-dashboard">
+      <div class="topbar">
+        <span class="topbar-title">Dashboard</span>
+        <div class="topbar-actions">
+          <span style="font-size:12px;color:var(--color-text-secondary)">Kamis, 11 Jun 2026</span>
+          <button class="btn btn-primary btn-sm" onclick="openModal('modal-new-servis')"><i class="ti ti-plus" aria-hidden="true"></i>Servis Baru</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="grid-4">
+          <div class="metric"><div class="metric-label">Servis masuk hari ini</div><div class="metric-val">12</div><div class="metric-sub">↑ 3 dari kemarin</div></div>
+          <div class="metric"><div class="metric-label">Dalam pengerjaan</div><div class="metric-val amber">8</div><div class="metric-sub">2 menunggu sparepart</div></div>
+          <div class="metric"><div class="metric-label">Siap diambil</div><div class="metric-val green">4</div><div class="metric-sub">Pelanggan sudah dihubungi</div></div>
+          <div class="metric"><div class="metric-label">Omzet hari ini</div><div class="metric-val">Rp 2,4jt</div><div class="metric-sub">Target Rp 3jt / hari</div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Antrian aktif saat ini</span>
+              <button class="btn btn-sm" onclick="nav('antrian')">Lihat semua</button>
+            </div>
+            <div class="queue-display">
+              <div class="queue-card"><div class="queue-num active">A007</div><div class="queue-type">Servis baru</div></div>
+              <div class="queue-card"><div class="queue-num waiting">B003</div><div class="queue-type">Pengambilan</div></div>
+              <div class="queue-card"><div class="queue-num" style="color:var(--color-text-secondary)">C001</div><div class="queue-type">Konsultasi</div></div>
+            </div>
+            <div style="font-size:12px;color:var(--color-text-secondary)">5 nomor masih menunggu · Rata-rata tunggu 18 mnt</div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Status servis hari ini</span></div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px">
+                <div style="display:flex;align-items:center;gap:8px"><div class="dot dot-waiting"></div>Menunggu diagnosa</div>
+                <div style="display:flex;align-items:center;gap:8px"><div class="progress-bar" style="width:100px"><div class="progress-fill" style="width:25%;background:#BA7517"></div></div><span>3</span></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px">
+                <div style="display:flex;align-items:center;gap:8px"><div class="dot dot-diag"></div>Menunggu persetujuan</div>
+                <div style="display:flex;align-items:center;gap:8px"><div class="progress-bar" style="width:100px"><div class="progress-fill" style="width:16%;background:#185FA5"></div></div><span>2</span></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px">
+                <div style="display:flex;align-items:center;gap:8px"><div class="dot dot-repair"></div>Dalam perbaikan</div>
+                <div style="display:flex;align-items:center;gap:8px"><div class="progress-bar" style="width:100px"><div class="progress-fill" style="width:50%;background:#3B6D11"></div></div><span>5</span></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px">
+                <div style="display:flex;align-items:center;gap:8px"><div class="dot dot-done"></div>Siap diambil</div>
+                <div style="display:flex;align-items:center;gap:8px"><div class="progress-bar" style="width:100px"><div class="progress-fill" style="width:33%;background:#0F6E56"></div></div><span>4</span></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px">
+                <div style="display:flex;align-items:center;gap:8px"><div class="dot dot-cancel"></div>Dibatalkan</div>
+                <div style="display:flex;align-items:center;gap:8px"><div class="progress-bar" style="width:100px"><div class="progress-fill" style="width:8%;background:#A32D2D"></div></div><span>1</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Servis terbaru</span><button class="btn btn-sm" onclick="nav('servis')">Lihat semua</button></div>
+          <table>
+            <thead><tr><th>No. Servis</th><th>Pelanggan</th><th>Perangkat</th><th>Keluhan</th><th>Teknisi</th><th>Status</th><th>Estimasi</th></tr></thead>
+            <tbody>
+              <tr><td style="font-family:var(--font-mono);font-size:12px">MAIN-SV-20260611-0012</td><td><div style="display:flex;align-items:center;gap:8px"><div class="avatar av-blue">AN</div>Andi N.</div></td><td>iPhone 14 Pro</td><td>LCD rusak</td><td>Budi</td><td><span class="status-badge s-repair"><span class="dot dot-repair"></span>Dalam Perbaikan</span></td><td>Rp 850.000</td></tr>
+              <tr><td style="font-family:var(--font-mono);font-size:12px">MAIN-SV-20260611-0011</td><td><div style="display:flex;align-items:center;gap:8px"><div class="avatar av-teal">SR</div>Sari R.</div></td><td>Samsung S23</td><td>Tidak bisa charge</td><td>Agus</td><td><span class="status-badge s-approval"><span class="dot" style="background:#534AB7"></span>Menunggu Persetujuan</span></td><td>Rp 350.000</td></tr>
+              <tr><td style="font-family:var(--font-mono);font-size:12px">MAIN-SV-20260611-0010</td><td><div style="display:flex;align-items:center;gap:8px"><div class="avatar av-amber">DW</div>Dwi W.</div></td><td>Redmi Note 12</td><td>Baterai boros</td><td>Budi</td><td><span class="status-badge s-done"><span class="dot dot-done"></span>Siap Diambil</span></td><td>Rp 180.000</td></tr>
+              <tr><td style="font-family:var(--font-mono);font-size:12px">MAIN-SV-20260611-0009</td><td><div style="display:flex;align-items:center;gap:8px"><div class="avatar av-blue">HM</div>Hendra M.</div></td><td>OPPO Reno 8</td><td>Speaker mati</td><td>Agus</td><td><span class="status-badge s-qc"><span class="dot" style="background:#633806"></span>Menunggu QC</span></td><td>Rp 220.000</td></tr>
+              <tr><td style="font-family:var(--font-mono);font-size:12px">MAIN-SV-20260611-0008</td><td><div style="display:flex;align-items:center;gap:8px"><div class="avatar av-teal">LS</div>Lina S.</div></td><td>iPhone 13</td><td>Kamera rusak</td><td>Budi</td><td><span class="status-badge s-waiting"><span class="dot dot-waiting"></span>Menunggu Diagnosa</span></td><td>-</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Stok hampir habis</span></div>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+              <div style="display:flex;justify-content:space-between"><span>LCD iPhone 11</span><span class="stock-low">Sisa 2</span></div>
+              <div style="display:flex;justify-content:space-between"><span>Baterai Redmi Note 10</span><span class="stock-med">Sisa 5</span></div>
+              <div style="display:flex;justify-content:space-between"><span>Konektor charger type-C</span><span class="stock-low">Sisa 3</span></div>
+              <div style="display:flex;justify-content:space-between"><span>LCD Samsung A53</span><span class="stock-med">Sisa 4</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Performa teknisi</span></div>
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+              <div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Budi</span><span>7 servis · 5 selesai</span></div><div class="progress-bar"><div class="progress-fill" style="width:71%"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Agus</span><span>5 servis · 4 selesai</span></div><div class="progress-bar"><div class="progress-fill" style="width:80%"></div></div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">HP belum diambil (3+ hari)</span></div>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+              <div style="display:flex;justify-content:space-between"><span>MAIN-SV-...0005</span><span style="color:#E24B4A">5 hari</span></div>
+              <div style="display:flex;justify-content:space-between"><span>MAIN-SV-...0003</span><span style="color:#BA7517">3 hari</span></div>
+            </div>
+            <div style="margin-top:10px"><button class="btn btn-sm" style="width:100%"><i class="ti ti-brand-whatsapp" aria-hidden="true"></i>Kirim reminder</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANTRIAN -->
+    <div id="page-antrian" style="display:none">
+      <div class="topbar">
+        <span class="topbar-title">Manajemen antrian</span>
+        <div class="topbar-actions">
+          <button class="btn btn-primary btn-sm" onclick="openModal('modal-new-antrian')"><i class="ti ti-plus" aria-hidden="true"></i>Nomor antrian baru</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="grid-3">
+          <div class="card" style="text-align:center">
+            <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:8px">Dipanggil sekarang</div>
+            <div style="font-size:48px;font-weight:500;color:#185FA5;margin-bottom:4px">A007</div>
+            <div style="font-size:12px;color:var(--color-text-secondary)">Servis baru</div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <button class="btn btn-sm" style="flex:1"><i class="ti ti-player-skip-forward" aria-hidden="true"></i>Lewati</button>
+              <button class="btn btn-primary btn-sm" style="flex:1"><i class="ti ti-arrow-right" aria-hidden="true"></i>Panggil berikut</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:12px">Antrian menunggu</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--color-background-secondary);border-radius:var(--border-radius-md)"><span style="font-weight:500">A008</span><span class="status-badge s-waiting">Menunggu</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--color-background-secondary);border-radius:var(--border-radius-md)"><span style="font-weight:500">A009</span><span class="status-badge s-waiting">Menunggu</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--color-background-secondary);border-radius:var(--border-radius-md)"><span style="font-weight:500">B004</span><span class="status-badge s-waiting">Menunggu</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--color-background-secondary);border-radius:var(--border-radius-md)"><span style="font-weight:500">B005</span><span class="status-badge s-waiting">Menunggu</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:12px">Statistik antrian hari ini</div>
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--color-text-secondary)">Total dipanggil</span><span>14</span></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--color-text-secondary)">Dilayani</span><span class="stock-ok">12</span></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--color-text-secondary)">Dilewati</span><span class="stock-low">2</span></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--color-text-secondary)">Rata-rata tunggu</span><span>18 menit</span></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--color-text-secondary)">Menunggu saat ini</span><span class="stock-med">5</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Riwayat antrian hari ini</span></div>
+          <table>
+            <thead><tr><th>Nomor</th><th>Tipe</th><th>Waktu ambil</th><th>Waktu dilayani</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td><strong>A001</strong></td><td>Servis baru</td><td>08:05</td><td>08:12</td><td><span class="status-badge" style="background:#E1F5EE;color:#0F6E56">Selesai</span></td></tr>
+              <tr><td><strong>B001</strong></td><td>Pengambilan</td><td>08:15</td><td>08:18</td><td><span class="status-badge" style="background:#E1F5EE;color:#0F6E56">Selesai</span></td></tr>
+              <tr><td><strong>A002</strong></td><td>Servis baru</td><td>08:30</td><td>08:35</td><td><span class="status-badge" style="background:#E1F5EE;color:#0F6E56">Selesai</span></td></tr>
+              <tr><td><strong>A003</strong></td><td>Servis baru</td><td>09:00</td><td>-</td><td><span class="status-badge s-cancel">Dilewati</span></td></tr>
+              <tr><td><strong>A007</strong></td><td>Servis baru</td><td>10:45</td><td>10:50</td><td><span class="status-badge" style="background:#E6F1FB;color:#185FA5">Dilayani</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- DATA SERVIS -->
+    <div id="page-servis" style="display:none">
+      <div class="topbar">
+        <span class="topbar-title">Data servis</span>
+        <div class="topbar-actions">
+          <button class="btn btn-primary btn-sm" onclick="openModal('modal-new-servis')"><i class="ti ti-plus" aria-hidden="true"></i>Terima servis baru</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="search-bar">
+          <input type="text" placeholder="Cari nomor servis, nama pelanggan, IMEI..." style="max-width:360px">
+          <button class="btn btn-sm"><i class="ti ti-search" aria-hidden="true"></i></button>
+        </div>
+        <div class="filter-row">
+          <button class="filter-chip active">Semua</button>
+          <button class="filter-chip">Menunggu diagnosa</button>
+          <button class="filter-chip">Dalam perbaikan</button>
+          <button class="filter-chip">Menunggu QC</button>
+          <button class="filter-chip">Siap diambil</button>
+          <button class="filter-chip">Selesai & diambil</button>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <table>
+            <thead><tr><th>No. Servis</th><th>Tgl masuk</th><th>Pelanggan</th><th>Perangkat</th><th>Keluhan utama</th><th>Teknisi</th><th>Status</th><th>Est. biaya</th><th></th></tr></thead>
+            <tbody>
+              <tr><td style="font-family:var(--font-mono);font-size:11px">MAIN-SV-20260611-0012</td><td style="font-size:12px;color:var(--color-text-secondary)">11 Jun</td><td>Andi N.</td><td>iPhone 14 Pro</td><td>LCD rusak</td><td>Budi</td><td><span class="status-badge s-repair">Dalam Perbaikan</span></td><td>Rp 850.000</td><td><button class="btn btn-sm" onclick="openModal('modal-detail-servis')">Detail</button></td></tr>
+              <tr><td style="font-family:var(--font-mono);font-size:11px">MAIN-SV-20260611-0011</td><td style="font-size:12px;color:var(--color-text-secondary)">11 Jun</td><td>Sari R.</td><td>Samsung S23</td><td>Tdk bisa charge</td><td>Agus</td><td><span class="status-badge s-approval">Menunggu Persetujuan</span></td><td>Rp 350.000</td><td><button class="btn btn-sm" onclick="openModal('modal-detail-servis')">Detail</button></td></tr>
+              <tr><td style="font-family:var(--font-mono);font-size:11px">MAIN-SV-20260611-0010</td><td style="font-size:12px;color:var(--color-text-secondary)">11 Jun</td><td>Dwi W.</td><td>Redmi Note 12</td><td>Baterai boros</td><td>Budi</td><td><span class="status-badge s-done">Siap Diambil</span></td><td>Rp 180.000</td><td><button class="btn btn-sm" onclick="openModal('modal-detail-servis')">Detail</button></td></tr>
+              <tr><td style="font-family:var(--font-mono);font-size:11px">MAIN-SV-20260611-0009</td><td style="font-size:12px;color:var(--color-text-secondary)">11 Jun</td><td>Hendra M.</td><td>OPPO Reno 8</td><td>Speaker mati</td><td>Agus</td><td><span class="status-badge s-qc">Menunggu QC</span></td><td>Rp 220.000</td><td><button class="btn btn-sm" onclick="openModal('modal-detail-servis')">Detail</button></td></tr>
+              <tr><td style="font-family:var(--font-mono);font-size:11px">MAIN-SV-20260611-0008</td><td style="font-size:12px;color:var(--color-text-secondary)">11 Jun</td><td>Lina S.</td><td>iPhone 13</td><td>Kamera rusak</td><td>Budi</td><td><span class="status-badge s-waiting">Menunggu Diagnosa</span></td><td>-</td><td><button class="btn btn-sm" onclick="openModal('modal-detail-servis')">Detail</button></td></tr>
+              <tr><td style="font-family:var(--font-mono);font-size:11px">MAIN-SV-20260610-0007</td><td style="font-size:12px;color:var(--color-text-secondary)">10 Jun</td><td>Rizal P.</td><td>Vivo V27</td><td>HP mati total</td><td>Budi</td><td><span class="status-badge s-taken">Selesai & Diambil</span></td><td>Rp 420.000</td><td><button class="btn btn-sm" onclick="openModal('modal-detail-servis')">Detail</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEKNISI -->
+    <div id="page-teknisi" style="display:none">
+      <div class="topbar"><span class="topbar-title">Panel teknisi</span></div>
+      <div class="content">
+        <div class="card" style="border-left:3px solid #185FA5;border-radius:0 var(--border-radius-lg) var(--border-radius-lg) 0">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><div style="font-size:12px;color:var(--color-text-secondary)">Job aktif saat ini</div><div style="font-family:var(--font-mono);font-size:13px;font-weight:500;margin-top:4px">MAIN-SV-20260611-0012 · Andi N. · iPhone 14 Pro</div></div>
+            <span class="status-badge s-repair">Dalam Perbaikan</span>
+          </div>
+        </div>
+        <div class="tab-bar">
+          <div class="tab active" onclick="switchTab(this,'tab-jobs')">Job saya (3)</div>
+          <div class="tab" onclick="switchTab(this,'tab-diag')">Input diagnosa</div>
+          <div class="tab" onclick="switchTab(this,'tab-sparepart')">Pakai sparepart</div>
+          <div class="tab" onclick="switchTab(this,'tab-progress')">Update progress</div>
+        </div>
+        <div id="tab-jobs">
+          <div class="card" style="padding:0;overflow:hidden">
+            <table>
+              <thead><tr><th>No. Servis</th><th>Perangkat</th><th>Keluhan</th><th>Prioritas</th><th>Status</th><th></th></tr></thead>
+              <tbody>
+                <tr><td style="font-family:var(--font-mono);font-size:11px">MAIN-SV-...0012</td><td>iPhone 14 Pro</td><td>LCD rusak</td><td><span class="inline-badge" style="background:#FCEBEB;color:#A32D2D">Tinggi</span></td><td><span class="status-badge s-repair">Dalam Perbaikan</span></td><td><button class="btn btn-sm btn-primary">Aktifkan</button></td></tr>
+                <tr><td style="font-family:var(--font-mono);font-size:11px">MAIN-SV-...0008</td><td>iPhone 13</td><td>Kamera rusak</td><td><span class="inline-badge" style="background:#FAEEDA;color:#854F0B">Sedang</span></td><td><span class="status-badge s-waiting">Menunggu Diagnosa</span></td><td><button class="btn btn-sm">Diagnosa</button></td></tr>
+                <tr><td style="font-family:var(--font-mono);font-size:11px">MAIN-SV-...0010</td><td>Redmi Note 12</td><td>Baterai boros</td><td><span class="inline-badge" style="background:#EAF3DE;color:#3B6D11">Rendah</span></td><td><span class="status-badge s-done">Siap Diambil</span></td><td><button class="btn btn-sm">Selesai</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div id="tab-diag" style="display:none">
+          <div class="card">
+            <div class="card-title" style="margin-bottom:1rem">Input hasil diagnosa · MAIN-SV-...0008</div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Hasil diagnosa <span>*</span></label><textarea rows="3" placeholder="Deskripsikan kerusakan yang ditemukan..."></textarea></div>
+              <div class="form-group"><label class="form-label">Penyebab kerusakan</label><textarea rows="3" placeholder="Penyebab kerusakan..."></textarea></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Estimasi biaya jasa (Rp) <span>*</span></label><input type="number" placeholder="250000"></div>
+              <div class="form-group"><label class="form-label">Estimasi biaya sparepart (Rp)</label><input type="number" placeholder="0"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Estimasi waktu selesai <span>*</span></label><select><option>1-2 jam</option><option>Hari ini</option><option>1 hari kerja</option><option>2-3 hari kerja</option><option>1 minggu</option></select></div>
+              <div class="form-group"><label class="form-label">Risiko servis</label><input type="text" placeholder="Tidak ada risiko khusus"></div>
+            </div>
+            <div style="display:flex;gap:8px;justify-content:flex-end">
+              <button class="btn">Simpan draft</button>
+              <button class="btn btn-primary"><i class="ti ti-brand-whatsapp" aria-hidden="true"></i>Kirim ke pelanggan</button>
+            </div>
+          </div>
+        </div>
+        <div id="tab-sparepart" style="display:none">
+          <div class="card">
+            <div class="card-title" style="margin-bottom:1rem">Penggunaan sparepart · MAIN-SV-...0012</div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Pilih sparepart <span>*</span></label><select><option>-- Pilih sparepart --</option><option>LCD iPhone 14 Pro (Stok: 3)</option><option>Baterai iPhone 14 Pro (Stok: 5)</option><option>Konektor charge iPhone (Stok: 8)</option></select></div>
+              <div class="form-group"><label class="form-label">Jumlah <span>*</span></label><input type="number" value="1" min="1"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Keterangan</label><input type="text" placeholder="Keterangan penggunaan..."></div>
+            <div style="background:var(--color-background-secondary);padding:10px 12px;border-radius:var(--border-radius-md);font-size:12px;color:var(--color-text-secondary);margin-bottom:12px">
+              ⚠ Penggunaan sparepart akan langsung mengurangi stok dan membuat log otomatis
+            </div>
+            <button class="btn btn-primary"><i class="ti ti-check" aria-hidden="true"></i>Catat penggunaan sparepart</button>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:.75rem">Log sparepart job ini</div>
+            <table>
+              <thead><tr><th>Waktu</th><th>Sparepart</th><th>Qty</th><th>Teknisi</th><th>Keterangan</th></tr></thead>
+              <tbody>
+                <tr><td style="font-size:12px">11 Jun 09:30</td><td>LCD iPhone 14 Pro</td><td>1</td><td>Budi</td><td>Ganti LCD pecah</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div id="tab-progress" style="display:none">
+          <div class="card">
+            <div class="card-title" style="margin-bottom:1rem">Update progress · MAIN-SV-...0012</div>
+            <div class="form-group"><label class="form-label">Status baru</label>
+              <select><option>Dalam Perbaikan</option><option>Menunggu Sparepart</option><option>Menunggu Konfirmasi Pelanggan</option><option>Menunggu QC</option></select>
+            </div>
+            <div class="form-group"><label class="form-label">Catatan perbaikan</label><textarea rows="3" placeholder="Jelaskan apa yang sudah dikerjakan..."></textarea></div>
+            <button class="btn btn-primary">Perbarui status</button>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:.75rem">Riwayat status</div>
+            <div class="timeline">
+              <div class="timeline-item"><div class="tl-dot"></div><div class="tl-content"><div class="tl-title">Dalam Perbaikan</div><div class="tl-time">Budi · 11 Jun 10:15</div><div style="font-size:12px;color:var(--color-text-secondary);margin-top:4px">Mulai pengerjaan ganti LCD</div></div></div>
+              <div class="timeline-item"><div class="tl-dot" style="background:#534AB7"></div><div class="tl-content"><div class="tl-title">Disetujui Pelanggan</div><div class="tl-time">Andi N. via WA · 11 Jun 09:55</div></div></div>
+              <div class="timeline-item"><div class="tl-dot" style="background:#BA7517"></div><div class="tl-content"><div class="tl-title">Menunggu Persetujuan</div><div class="tl-time">Sistem · 11 Jun 09:45</div><div style="font-size:12px;color:var(--color-text-secondary);margin-top:4px">Estimasi Rp 850.000 dikirim ke WA</div></div></div>
+              <div class="timeline-item"><div class="tl-dot" style="background:#888780"></div><div class="tl-content"><div class="tl-title">Menunggu Diagnosa</div><div class="tl-time">CS Rina · 11 Jun 08:50</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QC -->
+    <div id="page-qc" style="display:none">
+      <div class="topbar"><span class="topbar-title">Quality control</span></div>
+      <div class="content">
+        <div class="card" style="padding:0;overflow:hidden;margin-bottom:1rem">
+          <table>
+            <thead><tr><th>No. Servis</th><th>Pelanggan</th><th>Perangkat</th><th>Teknisi</th><th>Selesai pukul</th><th></th></tr></thead>
+            <tbody>
+              <tr><td style="font-family:var(--font-mono);font-size:11px">MAIN-SV-...0009</td><td>Hendra M.</td><td>OPPO Reno 8</td><td>Agus</td><td>10:30</td><td><button class="btn btn-primary btn-sm" onclick="switchTab(document.querySelector('#page-qc .tab'),'tab-qc-check')">Mulai QC</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="tab-bar">
+          <div class="tab active" id="tab-qc-list-btn" onclick="switchTab(this,'tab-qc-list')">Daftar menunggu QC</div>
+          <div class="tab" id="tab-qc-check-btn" onclick="switchTab(this,'tab-qc-check')">Form QC</div>
+        </div>
+        <div id="tab-qc-list">
+          <div class="empty-state" style="padding:2rem"><i class="ti ti-checkup-list" aria-hidden="true"></i><div style="margin-top:.5rem">1 unit menunggu QC di atas</div></div>
+        </div>
+        <div id="tab-qc-check" style="display:none">
+          <div class="card">
+            <div class="card-header"><span class="card-title">QC · MAIN-SV-...0009 · OPPO Reno 8 · Kel: Speaker mati</span></div>
+            <div class="section-title">Checklist pengecekan</div>
+            <div id="qc-checklist">
+              <div class="checklist-item"><i class="ti ti-circle-check check-icon ok" style="font-size:18px" aria-hidden="true"></i><span style="flex:1">Power — HP bisa nyala/mati normal</span><button class="btn btn-sm" onclick="toggleQC(this,'ok')">OK</button><button class="btn btn-sm" onclick="toggleQC(this,'fail')">Gagal</button></div>
+              <div class="checklist-item"><i class="ti ti-circle-check check-icon ok" style="font-size:18px" aria-hidden="true"></i><span style="flex:1">Charging — Bisa dicas normal</span><button class="btn btn-sm" onclick="toggleQC(this,'ok')">OK</button><button class="btn btn-sm" onclick="toggleQC(this,'fail')">Gagal</button></div>
+              <div class="checklist-item"><i class="ti ti-circle-check check-icon ok" style="font-size:18px" aria-hidden="true"></i><span style="flex:1">LCD / Touchscreen — Tampilan dan sentuhan normal</span><button class="btn btn-sm" onclick="toggleQC(this,'ok')">OK</button><button class="btn btn-sm" onclick="toggleQC(this,'fail')">Gagal</button></div>
+              <div class="checklist-item"><i class="ti ti-circle-check check-icon ok" style="font-size:18px" aria-hidden="true"></i><span style="flex:1">Speaker — Suara normal</span><button class="btn btn-sm" onclick="toggleQC(this,'ok')">OK</button><button class="btn btn-sm" onclick="toggleQC(this,'fail')">Gagal</button></div>
+              <div class="checklist-item"><i class="ti ti-circle-dashed check-icon pending" style="font-size:18px" aria-hidden="true"></i><span style="flex:1">Microphone — Rekam suara normal</span><button class="btn btn-sm" onclick="toggleQC(this,'ok')">OK</button><button class="btn btn-sm" onclick="toggleQC(this,'fail')">Gagal</button></div>
+              <div class="checklist-item"><i class="ti ti-circle-dashed check-icon pending" style="font-size:18px" aria-hidden="true"></i><span style="flex:1">Kamera — Kamera depan/belakang normal</span><button class="btn btn-sm" onclick="toggleQC(this,'ok')">OK</button><button class="btn btn-sm" onclick="toggleQC(this,'fail')">Gagal</button></div>
+              <div class="checklist-item"><i class="ti ti-circle-dashed check-icon pending" style="font-size:18px" aria-hidden="true"></i><span style="flex:1">WiFi — Bisa tersambung</span><button class="btn btn-sm" onclick="toggleQC(this,'ok')">OK</button><button class="btn btn-sm" onclick="toggleQC(this,'fail')">Gagal</button></div>
+              <div class="checklist-item"><i class="ti ti-circle-dashed check-icon pending" style="font-size:18px" aria-hidden="true"></i><span style="flex:1">Sinyal — Bisa membaca SIM</span><button class="btn btn-sm" onclick="toggleQC(this,'ok')">OK</button><button class="btn btn-sm" onclick="toggleQC(this,'fail')">Gagal</button></div>
+              <div class="checklist-item"><i class="ti ti-circle-dashed check-icon pending" style="font-size:18px" aria-hidden="true"></i><span style="flex:1">Tombol — Power/volume/home normal</span><button class="btn btn-sm" onclick="toggleQC(this,'ok')">OK</button><button class="btn btn-sm" onclick="toggleQC(this,'fail')">Gagal</button></div>
+              <div class="checklist-item"><i class="ti ti-circle-dashed check-icon pending" style="font-size:18px" aria-hidden="true"></i><span style="flex:1">Keluhan awal — Masalah speaker sudah selesai</span><button class="btn btn-sm" onclick="toggleQC(this,'ok')">OK</button><button class="btn btn-sm" onclick="toggleQC(this,'fail')">Gagal</button></div>
+            </div>
+            <div style="margin-top:1rem"><label class="form-label">Catatan QC</label><textarea rows="2" placeholder="Catatan tambahan..."></textarea></div>
+            <div style="display:flex;gap:8px;margin-top:1rem">
+              <button class="btn" style="color:#E24B4A;border-color:#E24B4A" onclick="alert('Status kembali ke Dalam Perbaikan')"><i class="ti ti-x" aria-hidden="true"></i>Gagal QC</button>
+              <button class="btn btn-primary" onclick="alert('QC lolos! Status → Siap Diambil. Notifikasi dikirim ke pelanggan.')"><i class="ti ti-check" aria-hidden="true"></i>Lolos QC — Siap diambil</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KASIR -->
+    <div id="page-kasir" style="display:none">
+      <div class="topbar"><span class="topbar-title">Kasir & pembayaran</span></div>
+      <div class="content">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title" style="margin-bottom:1rem">Cari servis siap bayar</div>
+            <div style="display:flex;gap:8px;margin-bottom:1rem">
+              <input type="text" placeholder="No. servis atau nama pelanggan..." id="kasir-search">
+              <button class="btn btn-primary" onclick="showKasirDetail()"><i class="ti ti-search" aria-hidden="true"></i></button>
+            </div>
+            <div id="kasir-empty" style="text-align:center;padding:1.5rem;color:var(--color-text-secondary);font-size:13px">Masukkan nomor servis untuk memproses pembayaran</div>
+            <div id="kasir-detail" style="display:none">
+              <div style="background:var(--color-background-secondary);padding:12px;border-radius:var(--border-radius-md);margin-bottom:12px">
+                <div style="font-size:12px;color:var(--color-text-secondary)">MAIN-SV-20260611-0010</div>
+                <div style="font-weight:500;margin:4px 0">Dwi W. — Redmi Note 12</div>
+                <div style="font-size:12px;color:var(--color-text-secondary)">Baterai boros · Teknisi: Budi</div>
+              </div>
+              <table style="margin-bottom:12px">
+                <tr><td style="color:var(--color-text-secondary);padding:4px 0">Biaya jasa</td><td style="text-align:right;padding:4px 0">Rp 80.000</td></tr>
+                <tr><td style="color:var(--color-text-secondary);padding:4px 0">Sparepart (Baterai Redmi Note 12)</td><td style="text-align:right;padding:4px 0">Rp 100.000</td></tr>
+                <tr><td style="color:var(--color-text-secondary);padding:4px 0">Diskon</td><td style="text-align:right;padding:4px 0;color:#1D9E75">- Rp 0</td></tr>
+                <tr style="border-top:0.5px solid var(--color-border-tertiary)"><td style="font-weight:500;padding:8px 0 4px">Total bayar</td><td style="text-align:right;font-size:18px;font-weight:500;padding:8px 0 4px">Rp 180.000</td></tr>
+              </table>
+              <div style="margin-bottom:12px"><label class="form-label">Metode pembayaran</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <button class="filter-chip active" id="pay-cash" onclick="selectPay(this)">Tunai</button>
+                  <button class="filter-chip" id="pay-qris" onclick="selectPay(this)">QRIS</button>
+                  <button class="filter-chip" id="pay-transfer" onclick="selectPay(this)">Transfer</button>
+                  <button class="filter-chip" id="pay-debit" onclick="selectPay(this)">Debit</button>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button class="btn" style="flex:1"><i class="ti ti-printer" aria-hidden="true"></i>Cetak invoice</button>
+                <button class="btn btn-primary" style="flex:1" onclick="alert('Pembayaran diterima! Status → Selesai & Diambil. Garansi 30 hari aktif sejak hari ini.')"><i class="ti ti-check" aria-hidden="true"></i>Proses bayar</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:.75rem">Transaksi hari ini</div>
+            <div class="grid-2" style="margin-bottom:.75rem">
+              <div class="metric"><div class="metric-label">Transaksi</div><div class="metric-val">7</div></div>
+              <div class="metric"><div class="metric-label">Total omzet</div><div class="metric-val green" style="font-size:18px">Rp 2,4jt</div></div>
+            </div>
+            <table>
+              <thead><tr><th>No. Invoice</th><th>Pelanggan</th><th>Total</th><th>Metode</th></tr></thead>
+              <tbody>
+                <tr><td style="font-size:11px;font-family:var(--font-mono)">MAIN-INV-...0007</td><td>Rizal P.</td><td>Rp 420.000</td><td>QRIS</td></tr>
+                <tr><td style="font-size:11px;font-family:var(--font-mono)">MAIN-INV-...0006</td><td>Wati S.</td><td>Rp 350.000</td><td>Tunai</td></tr>
+                <tr><td style="font-size:11px;font-family:var(--font-mono)">MAIN-INV-...0005</td><td>Bowo H.</td><td>Rp 180.000</td><td>Transfer</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STOK SPAREPART -->
+    <div id="page-stok" style="display:none">
+      <div class="topbar">
+        <span class="topbar-title">Manajemen stok sparepart</span>
+        <div class="topbar-actions">
+          <button class="btn btn-sm" onclick="openModal('modal-stok-masuk')"><i class="ti ti-package" aria-hidden="true"></i>Stok masuk</button>
+          <button class="btn btn-sm"><i class="ti ti-adjustments" aria-hidden="true"></i>Adjustment</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="grid-4" style="margin-bottom:1rem">
+          <div class="metric"><div class="metric-label">Total item</div><div class="metric-val">48</div></div>
+          <div class="metric"><div class="metric-label">Stok hampir habis</div><div class="metric-val red">4</div></div>
+          <div class="metric"><div class="metric-label">Nilai persediaan</div><div class="metric-val" style="font-size:17px">Rp 14,2jt</div></div>
+          <div class="metric"><div class="metric-label">Keluar bulan ini</div><div class="metric-val">37 item</div></div>
+        </div>
+        <div class="tab-bar">
+          <div class="tab active" onclick="switchTab(this,'tab-stok-list')">Daftar stok</div>
+          <div class="tab" onclick="switchTab(this,'tab-stok-log')">Log pergerakan</div>
+        </div>
+        <div id="tab-stok-list">
+          <div class="search-bar"><input type="text" placeholder="Cari nama sparepart, kategori, kompatibilitas..." style="max-width:360px"><button class="btn btn-sm"><i class="ti ti-search" aria-hidden="true"></i></button></div>
+          <div class="card" style="padding:0;overflow:hidden">
+            <table>
+              <thead><tr><th>Nama sparepart</th><th>Kategori</th><th>Kompatibilitas</th><th>Stok</th><th>Harga beli</th><th>Harga jual</th><th>Supplier</th></tr></thead>
+              <tbody>
+                <tr><td>LCD iPhone 14 Pro</td><td>LCD</td><td>iPhone 14 Pro</td><td class="stock-ok">3</td><td>Rp 550.000</td><td>Rp 750.000</td><td>Toko A</td></tr>
+                <tr><td>LCD iPhone 11</td><td>LCD</td><td>iPhone 11</td><td class="stock-low">2 ⚠</td><td>Rp 250.000</td><td>Rp 380.000</td><td>Toko A</td></tr>
+                <tr><td>LCD Samsung A53</td><td>LCD</td><td>Samsung A53</td><td class="stock-med">4</td><td>Rp 200.000</td><td>Rp 320.000</td><td>Toko B</td></tr>
+                <tr><td>Baterai iPhone 14 Pro</td><td>Baterai</td><td>iPhone 14 Pro</td><td class="stock-ok">7</td><td>Rp 180.000</td><td>Rp 280.000</td><td>Toko A</td></tr>
+                <tr><td>Baterai Redmi Note 10</td><td>Baterai</td><td>Redmi Note 10</td><td class="stock-med">5</td><td>Rp 55.000</td><td>Rp 100.000</td><td>Toko C</td></tr>
+                <tr><td>Konektor charger type-C</td><td>Konektor</td><td>Universal type-C</td><td class="stock-low">3 ⚠</td><td>Rp 25.000</td><td>Rp 55.000</td><td>Toko B</td></tr>
+                <tr><td>Baterai Redmi Note 12</td><td>Baterai</td><td>Redmi Note 12</td><td class="stock-ok">8</td><td>Rp 60.000</td><td>Rp 110.000</td><td>Toko C</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div id="tab-stok-log" style="display:none">
+          <div class="card" style="padding:0;overflow:hidden">
+            <table>
+              <thead><tr><th>Tanggal</th><th>Sparepart</th><th>Qty</th><th>Jenis log</th><th>No. Servis</th><th>User</th><th>Keterangan</th></tr></thead>
+              <tbody>
+                <tr><td style="font-size:12px">11 Jun 10:30</td><td>LCD iPhone 14 Pro</td><td style="color:#E24B4A">−1</td><td><span class="inline-badge" style="background:#FCEBEB;color:#A32D2D">Keluar Servis</span></td><td style="font-size:11px;font-family:var(--font-mono)">...0012</td><td>Budi</td><td>Ganti LCD</td></tr>
+                <tr><td style="font-size:12px">11 Jun 09:00</td><td>Baterai Redmi Note 12</td><td style="color:#1D9E75">+10</td><td><span class="inline-badge" style="background:#E1F5EE;color:#0F6E56">Stok Masuk</span></td><td>-</td><td>Admin</td><td>Pembelian dari Toko C</td></tr>
+                <tr><td style="font-size:12px">10 Jun 16:00</td><td>Baterai Redmi Note 10</td><td style="color:#E24B4A">−1</td><td><span class="inline-badge" style="background:#FCEBEB;color:#A32D2D">Keluar Servis</span></td><td style="font-size:11px;font-family:var(--font-mono)">...0010</td><td>Budi</td><td>Ganti baterai</td></tr>
+                <tr><td style="font-size:12px">10 Jun 11:00</td><td>LCD iPhone 11</td><td style="color:#BA7517">−2</td><td><span class="inline-badge" style="background:#FAEEDA;color:#854F0B">Adjustment</span></td><td>-</td><td>Admin</td><td>Stok opname — selisih 2 pcs</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GARANSI -->
+    <div id="page-garansi" style="display:none">
+      <div class="topbar"><span class="topbar-title">Manajemen garansi</span></div>
+      <div class="content">
+        <div class="tab-bar">
+          <div class="tab active" onclick="switchTab(this,'tab-garansi-aktif')">Garansi aktif</div>
+          <div class="tab" onclick="switchTab(this,'tab-klaim-garansi')">Klaim garansi</div>
+          <div class="tab" onclick="switchTab(this,'tab-setting-garansi')">Pengaturan durasi</div>
+        </div>
+        <div id="tab-garansi-aktif">
+          <div class="card" style="padding:0;overflow:hidden">
+            <table>
+              <thead><tr><th>No. Garansi</th><th>No. Servis</th><th>Pelanggan</th><th>Jenis pekerjaan</th><th>Mulai</th><th>Berakhir</th><th>Sisa hari</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td style="font-size:11px;font-family:var(--font-mono)">MAIN-WR-...0010</td><td style="font-size:11px;font-family:var(--font-mono)">...0010</td><td>Dwi W.</td><td>Ganti baterai</td><td>10 Jun</td><td>10 Jul</td><td class="stock-ok">29 hari</td><td><span class="status-badge" style="background:#E1F5EE;color:#0F6E56">Aktif</span></td></tr>
+                <tr><td style="font-size:11px;font-family:var(--font-mono)">MAIN-WR-...0007</td><td style="font-size:11px;font-family:var(--font-mono)">...0007</td><td>Rizal P.</td><td>Ganti LCD original</td><td>1 Jun</td><td>1 Jul</td><td class="stock-med">20 hari</td><td><span class="status-badge" style="background:#E1F5EE;color:#0F6E56">Aktif</span></td></tr>
+                <tr><td style="font-size:11px;font-family:var(--font-mono)">MAIN-WR-...0004</td><td style="font-size:11px;font-family:var(--font-mono)">...0004</td><td>Rini K.</td><td>Servis software</td><td>5 Jun</td><td>12 Jun</td><td class="stock-low">1 hari ⚠</td><td><span class="status-badge" style="background:#FAEEDA;color:#854F0B">Hampir habis</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div id="tab-klaim-garansi" style="display:none">
+          <div class="card">
+            <div class="card-title" style="margin-bottom:1rem">Proses klaim garansi</div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Nomor servis lama <span>*</span></label><input type="text" placeholder="MAIN-SV-20260601-0007"></div>
+              <div><label class="form-label">&nbsp;</label><button class="btn btn-primary" style="margin-top:0" onclick="alert('Ditemukan! Garansi aktif hingga 1 Jul 2026. Klaim valid.')"><i class="ti ti-search" aria-hidden="true"></i>Cek garansi</button></div>
+            </div>
+            <div style="background:var(--color-background-secondary);padding:12px;border-radius:var(--border-radius-md);margin-bottom:12px;font-size:13px">
+              <div style="font-weight:500;margin-bottom:6px">Syarat garansi berlaku:</div>
+              <div style="color:var(--color-text-secondary);display:flex;flex-direction:column;gap:4px">
+                <div>✓ Kerusakan sama dengan pekerjaan sebelumnya</div>
+                <div>✓ Masih dalam masa garansi</div>
+                <div>✓ Segel servis masih utuh</div>
+                <div>✓ Tidak ada kerusakan fisik baru</div>
+                <div>✗ HP tidak terkena air setelah servis</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="tab-setting-garansi" style="display:none">
+          <div class="card">
+            <div class="card-title" style="margin-bottom:1rem">Durasi garansi per jenis servis</div>
+            <table>
+              <thead><tr><th>Jenis servis</th><th>Durasi (hari)</th><th></th></tr></thead>
+              <tbody>
+                <tr><td>Ganti LCD original</td><td><input type="number" value="30" style="width:80px"></td><td><button class="btn btn-sm">Simpan</button></td></tr>
+                <tr><td>Ganti LCD aftermarket</td><td><input type="number" value="14" style="width:80px"></td><td><button class="btn btn-sm">Simpan</button></td></tr>
+                <tr><td>Ganti baterai</td><td><input type="number" value="30" style="width:80px"></td><td><button class="btn btn-sm">Simpan</button></td></tr>
+                <tr><td>Ganti konektor charger</td><td><input type="number" value="14" style="width:80px"></td><td><button class="btn btn-sm">Simpan</button></td></tr>
+                <tr><td>Servis software</td><td><input type="number" value="7" style="width:80px"></td><td><button class="btn btn-sm">Simpan</button></td></tr>
+                <tr><td>HP kena air</td><td><input type="number" value="0" style="width:80px"></td><td><button class="btn btn-sm">Simpan</button></td></tr>
+                <tr><td>Ganti IC</td><td><input type="number" value="7" style="width:80px"></td><td><button class="btn btn-sm">Simpan</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LAPORAN -->
+    <div id="page-laporan" style="display:none">
+      <div class="topbar"><span class="topbar-title">Laporan</span><div class="topbar-actions"><select style="font-size:13px;padding:5px 10px"><option>Juni 2026</option><option>Mei 2026</option><option>April 2026</option></select><button class="btn btn-sm"><i class="ti ti-download" aria-hidden="true"></i>Export</button></div></div>
+      <div class="content">
+        <div class="grid-4">
+          <div class="metric"><div class="metric-label">Total servis masuk</div><div class="metric-val">87</div><div class="metric-sub">↑ 12% dari bulan lalu</div></div>
+          <div class="metric"><div class="metric-label">Servis selesai</div><div class="metric-val green">74</div><div class="metric-sub">85% completion rate</div></div>
+          <div class="metric"><div class="metric-label">Omzet bulan ini</div><div class="metric-val" style="font-size:18px">Rp 18,4jt</div><div class="metric-sub">Target Rp 20jt</div></div>
+          <div class="metric"><div class="metric-label">Klaim garansi</div><div class="metric-val amber">3</div><div class="metric-sub">3,4% dari total</div></div>
+        </div>
+        <div class="tab-bar">
+          <div class="tab active" onclick="switchTab(this,'tab-lap-ops')">Operasional</div>
+          <div class="tab" onclick="switchTab(this,'tab-lap-keu')">Keuangan</div>
+          <div class="tab" onclick="switchTab(this,'tab-lap-tek')">Teknisi</div>
+          <div class="tab" onclick="switchTab(this,'tab-lap-stok')">Stok</div>
+        </div>
+        <div id="tab-lap-ops">
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title" style="margin-bottom:.75rem">Distribusi status servis bulan ini</div>
+              <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+                <div style="display:flex;align-items:center;gap:8px"><div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:85%"></div></div><span style="min-width:120px">Selesai & diambil (74)</span></div>
+                <div style="display:flex;align-items:center;gap:8px"><div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:10%;background:#E24B4A"></div></div><span style="min-width:120px">Dibatalkan (9)</span></div>
+                <div style="display:flex;align-items:center;gap:8px"><div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:5%;background:#888780"></div></div><span style="min-width:120px">Tidak bisa diperbaiki (4)</span></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title" style="margin-bottom:.75rem">Rata-rata waktu pengerjaan</div>
+              <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--color-text-secondary)">Rata-rata keseluruhan</span><span>1,8 hari</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--color-text-secondary)">Tercepat</span><span>2 jam</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--color-text-secondary)">Terlama</span><span>7 hari</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--color-text-secondary)">HP belum diambil</span><span class="stock-med">2</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="tab-lap-keu" style="display:none">
+          <div class="card">
+            <div class="card-title" style="margin-bottom:.75rem">Rincian pendapatan bulan ini</div>
+            <table>
+              <thead><tr><th>Komponen</th><th>Jumlah transaksi</th><th>Total</th></tr></thead>
+              <tbody>
+                <tr><td>Pendapatan jasa</td><td>74</td><td style="color:#1D9E75">Rp 9.800.000</td></tr>
+                <tr><td>Pendapatan sparepart</td><td>52</td><td style="color:#1D9E75">Rp 8.600.000</td></tr>
+                <tr><td>Diskon diberikan</td><td>8</td><td style="color:#E24B4A">- Rp 420.000</td></tr>
+                <tr style="font-weight:500"><td>Total omzet bersih</td><td></td><td>Rp 17.980.000</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div id="tab-lap-tek" style="display:none">
+          <div class="card" style="padding:0;overflow:hidden">
+            <table>
+              <thead><tr><th>Teknisi</th><th>Servis masuk</th><th>Selesai</th><th>Gagal QC</th><th>Klaim garansi</th><th>Rata-rata waktu</th></tr></thead>
+              <tbody>
+                <tr><td><div style="display:flex;align-items:center;gap:8px"><div class="avatar av-blue">BD</div>Budi</div></td><td>48</td><td class="stock-ok">42</td><td>2</td><td>1</td><td>1,6 hari</td></tr>
+                <tr><td><div style="display:flex;align-items:center;gap:8px"><div class="avatar av-teal">AG</div>Agus</div></td><td>39</td><td class="stock-ok">32</td><td>3</td><td>2</td><td>2,1 hari</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div id="tab-lap-stok" style="display:none">
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title" style="margin-bottom:.75rem">Sparepart terbanyak keluar</div>
+              <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+                <div style="display:flex;justify-content:space-between"><span>Baterai (berbagai tipe)</span><span>18 pcs</span></div>
+                <div style="display:flex;justify-content:space-between"><span>LCD (berbagai tipe)</span><span>12 pcs</span></div>
+                <div style="display:flex;justify-content:space-between"><span>Konektor charger</span><span>7 pcs</span></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title" style="margin-bottom:.75rem">Nilai persediaan</div>
+              <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--color-text-secondary)">Total nilai beli</span><span>Rp 14.200.000</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--color-text-secondary)">Total nilai jual</span><span>Rp 21.600.000</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--color-text-secondary)">Stok rusak/reject</span><span class="stock-low">Rp 350.000</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PELANGGAN -->
+    <div id="page-pelanggan" style="display:none">
+      <div class="topbar"><span class="topbar-title">Database pelanggan</span></div>
+      <div class="content">
+        <div class="search-bar"><input type="text" placeholder="Cari nama, nomor WA, email..." style="max-width:360px"><button class="btn btn-sm"><i class="ti ti-search" aria-hidden="true"></i></button></div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <table>
+            <thead><tr><th>Nama</th><th>No. WhatsApp</th><th>Total servis</th><th>Terakhir servis</th><th>Total spend</th><th></th></tr></thead>
+            <tbody>
+              <tr><td><div style="display:flex;align-items:center;gap:8px"><div class="avatar av-blue">AN</div>Andi Nugroho</div></td><td>0812-xxxx-1234</td><td>4</td><td>11 Jun 2026</td><td>Rp 1.850.000</td><td><button class="btn btn-sm">Riwayat</button></td></tr>
+              <tr><td><div style="display:flex;align-items:center;gap:8px"><div class="avatar av-teal">SR</div>Sari Rahayu</div></td><td>0856-xxxx-5678</td><td>2</td><td>11 Jun 2026</td><td>Rp 620.000</td><td><button class="btn btn-sm">Riwayat</button></td></tr>
+              <tr><td><div style="display:flex;align-items:center;gap:8px"><div class="avatar av-amber">DW</div>Dwi Wulandari</div></td><td>0877-xxxx-9012</td><td>3</td><td>11 Jun 2026</td><td>Rp 980.000</td><td><button class="btn btn-sm">Riwayat</button></td></tr>
+              <tr><td><div style="display:flex;align-items:center;gap:8px"><div class="avatar av-blue">RP</div>Rizal Pratama</div></td><td>0821-xxxx-3456</td><td>1</td><td>10 Jun 2026</td><td>Rp 420.000</td><td><button class="btn btn-sm">Riwayat</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODALS -->
+  <div id="modal-new-servis" class="modal-overlay" style="display:none;position:fixed" onclick="closeModalOutside(event,'modal-new-servis')">
+    <div class="modal">
+      <div class="modal-header"><span class="modal-title">Terima servis baru</span><button class="close-btn" onclick="closeModal('modal-new-servis')"><i class="ti ti-x" aria-hidden="true"></i></button></div>
+      <div class="tab-bar"><div class="tab active" id="t-cust" onclick="switchModalTab(this,'m-cust')">Data pelanggan</div><div class="tab" id="t-dev" onclick="switchModalTab(this,'m-dev')">Data HP</div><div class="tab" id="t-kel" onclick="switchModalTab(this,'m-kel')">Keluhan & foto</div></div>
+      <div id="m-cust">
+        <div class="form-row"><div class="form-group"><label class="form-label">Nama pelanggan <span>*</span></label><input type="text" placeholder="Nama lengkap"></div><div class="form-group"><label class="form-label">No. WhatsApp <span>*</span></label><input type="tel" placeholder="0812xxxxxxxx"></div></div>
+        <div class="form-row"><div class="form-group"><label class="form-label">Email</label><input type="text" placeholder="email@contoh.com"></div><div class="form-group"><label class="form-label">Alamat</label><input type="text" placeholder="Opsional"></div></div>
+      </div>
+      <div id="m-dev" style="display:none">
+        <div class="form-row"><div class="form-group"><label class="form-label">Merk <span>*</span></label><select><option>-- Pilih merk --</option><option>Apple iPhone</option><option>Samsung</option><option>Xiaomi/Redmi</option><option>OPPO</option><option>Vivo</option><option>Realme</option><option>Lainnya</option></select></div><div class="form-group"><label class="form-label">Tipe <span>*</span></label><input type="text" placeholder="Contoh: iPhone 14 Pro"></div></div>
+        <div class="form-row"><div class="form-group"><label class="form-label">Warna</label><input type="text" placeholder="Hitam, putih, dll"></div><div class="form-group"><label class="form-label">IMEI</label><input type="text" placeholder="Opsional"></div></div>
+        <div class="form-group"><label class="form-label">Kondisi fisik</label><select><option>Baik</option><option>Retak ringan</option><option>Retak berat</option><option>Penyok</option><option>Bekas servis sebelumnya</option></select></div>
+        <div class="form-group"><label class="form-label">Kelengkapan</label><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px"><label style="font-size:13px;display:flex;align-items:center;gap:4px"><input type="checkbox" checked> Unit HP</label><label style="font-size:13px;display:flex;align-items:center;gap:4px"><input type="checkbox"> Charger</label><label style="font-size:13px;display:flex;align-items:center;gap:4px"><input type="checkbox"> Dus</label><label style="font-size:13px;display:flex;align-items:center;gap:4px"><input type="checkbox"> SIM card</label><label style="font-size:13px;display:flex;align-items:center;gap:4px"><input type="checkbox"> Softcase</label></div></div>
+      </div>
+      <div id="m-kel" style="display:none">
+        <div class="form-group"><label class="form-label">Keluhan utama <span>*</span></label><select><option>-- Pilih keluhan --</option><option>HP mati total</option><option>LCD rusak</option><option>Baterai boros</option><option>Tidak bisa charge</option><option>Speaker mati</option><option>Kamera rusak</option><option>Sinyal hilang</option><option>Bootloop</option><option>Terkena air</option><option>Lainnya</option></select></div>
+        <div class="form-group"><label class="form-label">Keterangan tambahan</label><textarea rows="2" placeholder="Ceritakan lebih lanjut..."></textarea></div>
+        <div class="form-row"><div class="form-group"><label class="form-label">Password / PIN HP</label><input type="text" placeholder="Jika diperlukan untuk diagnosa"></div><div class="form-group"><label class="form-label">Persetujuan</label><label style="font-size:13px;display:flex;align-items:center;gap:6px;margin-top:8px"><input type="checkbox"> Pelanggan setuju HP diperiksa</label></div></div>
+        <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px;font-size:12px;color:var(--color-text-secondary);margin-bottom:12px">
+          <div style="font-weight:500;color:var(--color-text-primary);margin-bottom:4px">Nomor servis akan dibuat otomatis:</div>
+          MAIN-SV-20260611-0013
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn" style="flex:1">Simpan draft</button>
+          <button class="btn btn-primary" style="flex:1" onclick="alert('Servis MAIN-SV-20260611-0013 berhasil dibuat!\nBukti dicetak & link tracking dikirim ke WhatsApp pelanggan.');closeModal('modal-new-servis')"><i class="ti ti-check" aria-hidden="true"></i>Simpan & cetak bukti</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-detail-servis" class="modal-overlay" style="display:none;position:fixed" onclick="closeModalOutside(event,'modal-detail-servis')">
+    <div class="modal">
+      <div class="modal-header"><span class="modal-title">Detail servis · MAIN-SV-20260611-0012</span><button class="close-btn" onclick="closeModal('modal-detail-servis')"><i class="ti ti-x" aria-hidden="true"></i></button></div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem">
+        <div><div style="font-size:12px;color:var(--color-text-secondary)">Pelanggan</div><div style="font-weight:500">Andi Nugroho</div><div style="font-size:12px;color:var(--color-text-secondary)">0812-xxxx-1234</div></div>
+        <span class="status-badge s-repair">Dalam Perbaikan</span>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:1rem">
+        <div style="flex:1;background:var(--color-background-secondary);padding:10px;border-radius:var(--border-radius-md)"><div style="font-size:11px;color:var(--color-text-secondary)">Perangkat</div><div style="font-size:13px;font-weight:500;margin-top:2px">iPhone 14 Pro · Hitam</div></div>
+        <div style="flex:1;background:var(--color-background-secondary);padding:10px;border-radius:var(--border-radius-md)"><div style="font-size:11px;color:var(--color-text-secondary)">Keluhan</div><div style="font-size:13px;font-weight:500;margin-top:2px">LCD rusak</div></div>
+        <div style="flex:1;background:var(--color-background-secondary);padding:10px;border-radius:var(--border-radius-md)"><div style="font-size:11px;color:var(--color-text-secondary)">Teknisi</div><div style="font-size:13px;font-weight:500;margin-top:2px">Budi</div></div>
+      </div>
+      <div style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px;margin-bottom:1rem">
+        <div style="font-size:12px;font-weight:500;margin-bottom:6px">Hasil diagnosa</div>
+        <div style="font-size:13px;color:var(--color-text-secondary)">LCD mengalami kerusakan pada backlight, menyebabkan layar gelap meski perangkat menyala. Kemungkinan akibat benturan.</div>
+        <div style="display:flex;gap:16px;margin-top:10px;font-size:12px">
+          <div><span style="color:var(--color-text-secondary)">Est. biaya: </span><strong>Rp 850.000</strong></div>
+          <div><span style="color:var(--color-text-secondary)">Est. selesai: </span><strong>1-2 hari kerja</strong></div>
+        </div>
+      </div>
+      <div style="font-size:12px;font-weight:500;margin-bottom:.5rem">Riwayat status</div>
+      <div class="timeline">
+        <div class="timeline-item"><div class="tl-dot"></div><div class="tl-content"><div class="tl-title">Dalam Perbaikan</div><div class="tl-time">Budi · 11 Jun 10:15</div></div></div>
+        <div class="timeline-item"><div class="tl-dot" style="background:#534AB7"></div><div class="tl-content"><div class="tl-title">Disetujui Pelanggan via WA</div><div class="tl-time">Andi N. · 11 Jun 09:55</div></div></div>
+        <div class="timeline-item"><div class="tl-dot" style="background:#BA7517"></div><div class="tl-content"><div class="tl-title">Estimasi dikirim ke WA</div><div class="tl-time">Sistem · 11 Jun 09:45</div></div></div>
+        <div class="timeline-item"><div class="tl-dot" style="background:#888780"></div><div class="tl-content"><div class="tl-title">Diterima — Menunggu Diagnosa</div><div class="tl-time">CS Rina · 11 Jun 08:50</div></div></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:1rem">
+        <button class="btn btn-sm"><i class="ti ti-brand-whatsapp" aria-hidden="true"></i>Hubungi via WA</button>
+        <button class="btn btn-sm"><i class="ti ti-printer" aria-hidden="true"></i>Cetak bukti</button>
+        <button class="btn btn-sm"><i class="ti ti-link" aria-hidden="true"></i>Salin link tracking</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-new-antrian" class="modal-overlay" style="display:none;position:fixed" onclick="closeModalOutside(event,'modal-new-antrian')">
+    <div class="modal" style="width:380px">
+      <div class="modal-header"><span class="modal-title">Ambil nomor antrian</span><button class="close-btn" onclick="closeModal('modal-new-antrian')"><i class="ti ti-x" aria-hidden="true"></i></button></div>
+      <div class="form-group"><label class="form-label">Tipe antrian</label>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+          <label style="display:flex;align-items:center;gap:10px;padding:10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer"><input type="radio" name="q-type" value="A" checked><div><div style="font-size:13px;font-weight:500">A — Servis baru</div><div style="font-size:12px;color:var(--color-text-secondary)">Membawa HP untuk diservis</div></div></label>
+          <label style="display:flex;align-items:center;gap:10px;padding:10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer"><input type="radio" name="q-type" value="B"><div><div style="font-size:13px;font-weight:500">B — Pengambilan HP</div><div style="font-size:12px;color:var(--color-text-secondary)">Mengambil HP yang sudah selesai</div></div></label>
+          <label style="display:flex;align-items:center;gap:10px;padding:10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer"><input type="radio" name="q-type" value="C"><div><div style="font-size:13px;font-weight:500">C — Konsultasi</div><div style="font-size:12px;color:var(--color-text-secondary)">Tanya harga atau cek kondisi</div></div></label>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:.5rem" onclick="alert('Nomor antrian A010 berhasil dibuat!');closeModal('modal-new-antrian')"><i class="ti ti-printer" aria-hidden="true"></i>Cetak nomor antrian</button>
+    </div>
+  </div>
+
+  <div id="modal-stok-masuk" class="modal-overlay" style="display:none;position:fixed" onclick="closeModalOutside(event,'modal-stok-masuk')">
+    <div class="modal" style="width:460px">
+      <div class="modal-header"><span class="modal-title">Input stok masuk</span><button class="close-btn" onclick="closeModal('modal-stok-masuk')"><i class="ti ti-x" aria-hidden="true"></i></button></div>
+      <div class="form-group"><label class="form-label">Sparepart <span>*</span></label><select><option>-- Pilih atau tambah baru --</option><option>LCD iPhone 11</option><option>Baterai Redmi Note 10</option><option>Konektor charger type-C</option></select></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Jumlah <span>*</span></label><input type="number" placeholder="0" min="1"></div>
+        <div class="form-group"><label class="form-label">Harga beli per unit (Rp)</label><input type="number" placeholder="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Supplier</label><input type="text" placeholder="Nama toko/supplier"></div>
+        <div class="form-group"><label class="form-label">Tanggal beli</label><input type="text" placeholder="11/06/2026"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Keterangan</label><input type="text" placeholder="Opsional"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn" onclick="closeModal('modal-stok-masuk')">Batal</button>
+        <button class="btn btn-primary" onclick="alert('Stok berhasil ditambah dan log tercatat!');closeModal('modal-stok-masuk')"><i class="ti ti-check" aria-hidden="true"></i>Simpan stok masuk</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const pages = ['dashboard','antrian','servis','teknisi','qc','kasir','stok','garansi','laporan','pelanggan'];
+function nav(p) {
+  pages.forEach(id => {
+    const el = document.getElementById('page-'+id);
+    if(el) el.style.display = id===p?'':'none';
+  });
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  event && event.currentTarget && event.currentTarget.classList.add('active');
+}
+function openModal(id) {
+  document.getElementById(id).style.display = 'flex';
+}
+function closeModal(id) {
+  document.getElementById(id).style.display = 'none';
+}
+function closeModalOutside(e, id) {
+  if(e.target.id === id) closeModal(id);
+}
+function switchTab(el, tabId) {
+  const parent = el.parentElement;
+  parent.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const container = parent.nextElementSibling.parentElement || parent.parentElement;
+  const tabs = container.querySelectorAll('[id^="tab-"]');
+  tabs.forEach(t => {
+    if(t.id.startsWith(tabId.split('-').slice(0,2).join('-'))) {
+      t.style.display = t.id === tabId ? '' : 'none';
+    }
+  });
+}
+function switchModalTab(el, tabId) {
+  const bar = el.parentElement;
+  bar.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  ['m-cust','m-dev','m-kel'].forEach(id => {
+    const el2 = document.getElementById(id);
+    if(el2) el2.style.display = id===tabId?'':'none';
+  });
+}
+function toggleQC(btn, result) {
+  const item = btn.closest('.checklist-item');
+  const icon = item.querySelector('.check-icon');
+  if(result==='ok') {
+    icon.className = 'ti ti-circle-check check-icon ok';
+    icon.style.color = '#1D9E75';
+  } else {
+    icon.className = 'ti ti-circle-x check-icon fail';
+    icon.style.color = '#E24B4A';
+  }
+}
+function selectPay(el) {
+  document.querySelectorAll('#page-kasir .filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+function showKasirDetail() {
+  document.getElementById('kasir-empty').style.display='none';
+  document.getElementById('kasir-detail').style.display='block';
+}
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', function() {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+</script>
